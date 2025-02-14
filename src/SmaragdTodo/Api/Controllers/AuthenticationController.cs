@@ -3,6 +3,7 @@ using Api.Infrastructure;
 using Core.Database.Models;
 using Core.Infrastructure;
 using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -54,7 +55,8 @@ public class AuthenticationController : ControllerBase
         var email = payload.Email.ToLower();
 
         var user = await _context.Users
-            .WithPartitionKey(email)
+            .WithPartitionKey(GoogleDefaults.DisplayName)
+            .Where(u => u.Email == email)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user != null)
@@ -68,13 +70,16 @@ public class AuthenticationController : ControllerBase
         var id = Guid.NewGuid().ToString();
         var userEntity = new User
         {
-            UserId = id,
-            id = id,
+            Id = id,
             CreatedAt = _dateTimeProvider.UtcNow,
             Email = email,
-            FirstName = payload.GivenName,
-            LastName = payload.FamilyName,
-            Picture = payload.Picture
+            Name = new Name
+            {
+                FirstName = payload.GivenName,
+                LastName = payload.FamilyName
+            },
+            Picture = payload.Picture,
+            AuthenticationProvider = GoogleDefaults.DisplayName
         };
 
         await _context.Users.AddAsync(userEntity, cancellationToken);

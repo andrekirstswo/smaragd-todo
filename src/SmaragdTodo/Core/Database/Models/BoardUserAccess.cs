@@ -1,9 +1,17 @@
-﻿namespace Core.Database.Models;
+﻿using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
-public class BoardUserAccess : BaseEntity
+namespace Core.Database.Models;
+
+public class BoardUserAccess
 {
-    public string UserId { get; set; } = default!;
-    public string Role { get; set; } = BoardUserAccessRoles.Reader;
+    [JsonPropertyName("userId")]
+    [JsonProperty("userId")]
+    public string UserId { get; set; }
+
+    [JsonPropertyName("role")]
+    [JsonProperty("role")]
+    public string Role { get; set; }
 }
 
 public static class BoardUserAccessRoles

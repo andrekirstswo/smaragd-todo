@@ -1,15 +1,19 @@
 ﻿using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Core.Database.Models;
 
 public class Board : BaseEntity
 {
     [JsonPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; } = default!;
 
     [JsonPropertyName("accesses")]
-    public List<BoardUserAccess> Accesses { get; set; } = new List<BoardUserAccess>();
+    [JsonProperty("accesses")]
+    public IList<BoardUserAccess> Accesses { get; set; } = default!;
 
     [JsonPropertyName("owner")]
-    public string Owner { get; set; }
+    [JsonProperty("owner")]
+    public string Owner { get; set; } = default!;
 }
