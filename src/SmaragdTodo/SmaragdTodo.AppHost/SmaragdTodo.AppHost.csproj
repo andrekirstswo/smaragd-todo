@@ -17,11 +17,12 @@
     <PackageReference Include="Aspire.Hosting.Azure.CosmosDB" Version="9.0.0" />
     <PackageReference Include="Aspire.Hosting.Azure.Functions" Version="9.0.0-preview.5.24551.3" />
     <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.Keycloak" Version="9.0.0-preview.5.24551.3" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Api\Api.csproj" />
     <ProjectReference Include="..\Functions\Functions.csproj" />
-    <ProjectReference Include="..\Web\Web.csproj" />
   </ItemGroup>
 
 </Project>

@@ -16,7 +16,8 @@ var functions = builder
     .WithReference(serviceBus)
     .WithReference(cosmosDb);
 
-builder.AddProject<Projects.Web>("web")
-    .WithReference(functions);
+builder.AddProject<Projects.Api>("api")
+    .WithReference(serviceBus)
+    .WithReference(cosmosDb);
 
 builder.Build().Run();

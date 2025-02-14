@@ -1,0 +1,20 @@
+<form [formGroup]="createBoardForm" (ngSubmit)="onSubmit()">
+  <input type="text" formControlName="name" placeholder="Board Name" />
+
+  @if(createBoardForm.get('name')?.invalid && createBoardForm.get('name')?.touched)
+  {
+    <div>Name ist erforderlich</div>
+  }
+
+  <button type="submit">Erstellen</button>
+
+  @if(response)
+  {
+    <div>{{ response | json }}</div>
+  }
+
+  @if(errorMessage)
+  {
+    <div>{{ errorMessage }}</div>
+  }
+</form>
