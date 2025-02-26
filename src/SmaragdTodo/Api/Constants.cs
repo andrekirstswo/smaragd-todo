@@ -1,4 +1,4 @@
-﻿namespace Functions;
+﻿namespace Api;
 
 public static class Constants
 {

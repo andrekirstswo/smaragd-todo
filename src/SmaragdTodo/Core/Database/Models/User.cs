@@ -7,7 +7,7 @@ public class User : BaseEntity
 {
     [JsonPropertyName("email")]
     [JsonProperty("email")]
-    public string Email { get; set; } = null!;
+    public string Email { get; set; } = default!;
 
     [JsonPropertyName("name")]
     [JsonProperty("name")]

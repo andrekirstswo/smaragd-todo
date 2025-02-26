@@ -1,103 +1,85 @@
-﻿using Api.Database;
-using Api.Infrastructure;
-using Core.Database.Models;
-using Core.Infrastructure;
-using Google.Apis.Auth;
-using Microsoft.AspNetCore.Authentication.Google;
+﻿using System.Text.Json;
+using Api.Database;
+using Api.Services;
+using Core.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[AllowAnonymous]
 public class AuthenticationController : ControllerBase
 {
-    private readonly SmaragdTodoContext _context;
-    private readonly IDateTimeProvider _dateTimeProvider;
-    private readonly HttpContext? _httpContext;
-    private readonly GoogleAuthenticationOptions _options;
+    private readonly IGoogleAuthorization _googleAuthorization;
+    private readonly SmaragdTodoContext _dbContext;
 
     public AuthenticationController(
-        SmaragdTodoContext context,
-        IDateTimeProvider dateTimeProvider,
-        IHttpContextAccessor httpContextAccessor,
-        IOptions<GoogleAuthenticationOptions> options)
+        IGoogleAuthorization googleAuthorization,
+        SmaragdTodoContext dbContext)
     {
-        _options = options.Value;
-        _context = context;
-        _dateTimeProvider = dateTimeProvider;
-        _httpContext = httpContextAccessor.HttpContext;
+        _googleAuthorization = googleAuthorization;
+        _dbContext = dbContext;
     }
 
-    [HttpPost("login"), AllowAnonymous]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken = default)
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult Authorize() => Ok(_googleAuthorization.GetAuthorizationUrl());
+
+    [HttpGet("callback")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Callback(string code, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(_httpContext);
-        ArgumentException.ThrowIfNullOrEmpty(request.Token);
+        var userCredential = await _googleAuthorization.ExchangeCodeForToken(code, cancellationToken);
+        var user = await _dbContext.Credentials
+            .Where(c => c.AccessToken == userCredential.Token.AccessToken)
+            .FirstOrDefaultAsync(cancellationToken);
+        
+        ArgumentNullException.ThrowIfNull(user);
 
-        var token = request.Token;
+        return Redirect($"https://localhost:7287/connect/{user.UserId}");
+    }
 
-        var settings = new GoogleJsonWebSignature.ValidationSettings
-        {
-            Audience = new [] { _options.ClientId }
-        };
-
-        var payload = await GoogleJsonWebSignature.ValidateAsync(token, settings);
-
-        if (!payload.EmailVerified)
-        {
-            return Unauthorized(KnownErrors.Authentication.EmailNotVerified);
-        }
-
-        var email = payload.Email.ToLower();
-
-        var user = await _context.Users
-            .WithPartitionKey(GoogleDefaults.DisplayName)
-            .Where(u => u.Email == email)
+    [HttpGet("token/{userId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAccessToken(string userId, CancellationToken cancellationToken = default)
+    {
+        var credential = await _dbContext.Credentials
+            .Where(c => c.UserId == userId)
+            .Select(u => new
+            {
+                u.Id,
+                u.AccessToken
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (user != null)
-        {
-            return Ok(new
-            {
-                UserId = payload.Subject
-            });
-        }
+        ArgumentNullException.ThrowIfNull(credential);
+        ArgumentException.ThrowIfNullOrEmpty(credential.AccessToken);
 
-        var id = Guid.NewGuid().ToString();
-        var userEntity = new User
-        {
-            Id = id,
-            CreatedAt = _dateTimeProvider.UtcNow,
-            Email = email,
-            Name = new Name
-            {
-                FirstName = payload.GivenName,
-                LastName = payload.FamilyName
-            },
-            Picture = payload.Picture,
-            AuthenticationProvider = GoogleDefaults.DisplayName
-        };
+        var response = JsonSerializer.Serialize(new Token(credential.AccessToken, credential.Id));
 
-        await _context.Users.AddAsync(userEntity, cancellationToken);
-        var rowsAffected = await _context.SaveChangesAsync(cancellationToken);
-
-        if (rowsAffected == 1)
-        {
-            return Ok(new
-            {
-                UserId = payload.Subject
-            });
-        }
-
-        return Unauthorized();
+        return Ok(response);
     }
 }
 
 public class LoginRequest
 {
-    public string? Token { get; set; }
+    public string? AccessToken { get; set; }
+}
+
+public class LoginResponse
+{
+    public string AccessToken { get; set; } = default!;
+    public string? RefreshToken { get; set; }
+    public LoginResponseUser? User { get; set; }
+}
+
+public class LoginResponseUser
+{
+    public string Id { get; set; } = default!;
+    public string? EMail { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
 }

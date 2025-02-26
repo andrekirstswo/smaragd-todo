@@ -1,0 +1,13 @@
+﻿@page "/"
+@using System.Security.Claims
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello, you are authorized!</h1>
+        <h5>ID: @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value</h5>
+    </Authorized>
+    <NotAuthorized>
+        <h1>Hello, you are not authorized</h1>
+        @* <button class="btn btn-primary" @onclick="Login">Login with Google</button> *@
+    </NotAuthorized>
+</AuthorizeView>

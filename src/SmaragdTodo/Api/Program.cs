@@ -1,14 +1,15 @@
 using Api.Database;
 using Api.Infrastructure;
+using Api.Services;
 using Core;
 using Core.Infrastructure;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
-using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 namespace Api;
@@ -20,13 +21,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.AddServiceDefaults();
 
-        builder.Services.AddControllers(options =>
-        {
-            var policy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-            options.Filters.Add(new AuthorizeFilter(policy));
-        });
+        builder.Services.AddControllers();
         builder.Services.AddOpenApi();
 
         builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
@@ -44,22 +39,31 @@ public class Program
         builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
         builder.Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddCookie()
-            .AddJwtBearer(options =>
+            .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = Core.Constants.Token.Scheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddScheme<AuthenticationSchemeOptions, GoogleAccessTokenAuthenticationHandler>(Core.Constants.Token.Scheme, null)
+            .AddGoogle(options =>
             {
                 var section = builder.Configuration.GetSection("Authentication:Google");
-                options.Authority = section[nameof(GoogleAuthenticationOptions.Authority)];
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = section[nameof(GoogleAuthenticationOptions.ValidIssuer)],
-                    ValidateAudience = true,
-                    ValidAudiences = new [] { section[nameof(GoogleAuthenticationOptions.ClientId)] },
-                    ValidateLifetime = true
-                };
+
+                var clientId = section["ClientId"];
+                var clientSecret = section["ClientSecret"];
+                var redirectUri = section["RedirectUri"];
+
+                ArgumentException.ThrowIfNullOrEmpty(clientId);
+                ArgumentException.ThrowIfNullOrEmpty(clientSecret);
+                ArgumentException.ThrowIfNullOrEmpty(redirectUri);
+
+                options.ClientId = clientId;
+                options.ClientSecret = clientSecret;
+                options.CallbackPath = $"/{redirectUri}";
             });
         builder.Services.AddAuthorization();
+        builder.Services.AddScoped<IGoogleAuthHelper, GoogleAuthHelper>();
+        builder.Services.AddScoped<IGoogleAuthorization, GoogleAuthorization>();
 
         builder.Services.AddDbContext<SmaragdTodoContext>(options =>
         {
@@ -84,8 +88,7 @@ public class Program
                 policyBuilder
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .WithOrigins("http://localhost:4200")
-                    .AllowCredentials();
+                    .AllowAnyOrigin();
             });
         });
 

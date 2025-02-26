@@ -1,0 +1,45 @@
+﻿@page "/connect/{id}"
+@using WebUI.Infrastructure
+
+@code {
+    public Task<AuthenticationState> AuthState { get; set; }
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var client = HttpClientFactory.CreateClient(Constants.ApiClient);
+
+        try
+        {
+            var user = (await AuthState).User;
+            if (user.Identity!.IsAuthenticated)
+            {
+                NavManager.NavigateTo("/");
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        if (string.IsNullOrEmpty(Id))
+        {
+            NavManager.NavigateTo("/");
+        }
+
+        var response = await client.GetAsync($"api/Authentication/token/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var accessToken = await response.Content.ReadAsStringAsync();
+            await LocalStorageService.SaveAsStringAsync(Core.Constants.Token.Key, accessToken);
+            var authState = (CustomAuthState)AuthStateProvider;
+            authState.NotifyAuthStateChanged();
+            NavManager.NavigateTo("/", true);
+        }
+
+        NavManager.NavigateTo("/");
+    }
+}

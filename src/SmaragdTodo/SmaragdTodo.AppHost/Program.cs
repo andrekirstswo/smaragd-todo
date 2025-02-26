@@ -16,8 +16,13 @@ var functions = builder
     .WithReference(serviceBus)
     .WithReference(cosmosDb);
 
-builder.AddProject<Projects.Api>("api")
+var api = builder.AddProject<Projects.Api>("apiservice")
     .WithReference(serviceBus)
     .WithReference(cosmosDb);
+
+builder.AddProject<Projects.WebUI>("webui")
+    .WithExternalHttpEndpoints()
+    .WithReference(api)
+    .WaitFor(api);
 
 builder.Build().Run();

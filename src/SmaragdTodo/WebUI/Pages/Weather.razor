@@ -1,0 +1,51 @@
+﻿@page "/weather"
+@using System.Text.Json
+@using Core.Models
+@using System.Net.Http.Headers
+
+<PageTitle>Boards</PageTitle>
+
+<h1>Weather</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (_boards == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var board in _boards)
+            {
+                <tr>
+                    <td>@board.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private GetBoardsDto[]? _boards;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorageService.GetItemAsStringAsync(Core.Constants.Token.Key);
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            var client = HttpClientFactory.CreateClient(Constants.ApiClient);
+            var tokenModel = JsonSerializer.Deserialize<Token>(token);
+            ArgumentNullException.ThrowIfNull(tokenModel);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenModel.AccessToken);
+            _boards = await client.GetFromJsonAsync<GetBoardsDto[]>("api/Board") ?? Array.Empty<GetBoardsDto>();
+        }
+    }
+}
