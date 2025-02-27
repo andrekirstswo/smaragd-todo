@@ -1,8 +1,10 @@
 ﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using Api.Database;
 using Api.Services;
 using Core.Database.Models;
+using Core.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -50,7 +52,11 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
         }
 
         var accessToken = authenticationHeader[Core.Constants.Prefixes.Bearer.Length..].Trim();
-        var userCredential = await _googleAuthorization.ValidateToken(accessToken);
+        var token = JsonSerializer.Deserialize<Token>(accessToken);
+        
+        ArgumentNullException.ThrowIfNull(token);
+        
+        var userCredential = await _googleAuthorization.ValidateToken(token);
         var user = await GetUser(userCredential.Token.AccessToken);
         if (user == null)
         {

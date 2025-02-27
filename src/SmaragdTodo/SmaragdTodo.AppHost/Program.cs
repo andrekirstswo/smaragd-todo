@@ -1,16 +1,21 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+var apicache = builder
+    .AddAzureRedis("apicache")
+    .WithAccessKeyAuthentication()
+    .RunAsContainer();
+
 var cosmosDb = builder.ExecutionContext.IsPublishMode
     ? builder
         .AddAzureCosmosDB("cosmosdb")
-        .AddDatabase("SmaragdTodo")
+        .AddCosmosDatabase("SmaragdTodo")
     : builder.AddConnectionString("cosmosdb");
 
 var serviceBus = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureServiceBus("messaging")
     : builder.AddConnectionString("messaging");
 
-var functions = builder
+builder
     .AddAzureFunctionsProject<Projects.Functions>("functions")
     .WithExternalHttpEndpoints()
     .WithReference(serviceBus)
@@ -18,7 +23,8 @@ var functions = builder
 
 var api = builder.AddProject<Projects.Api>("apiservice")
     .WithReference(serviceBus)
-    .WithReference(cosmosDb);
+    .WithReference(cosmosDb)
+    .WithReference(apicache);
 
 builder.AddProject<Projects.WebUI>("webui")
     .WithExternalHttpEndpoints()

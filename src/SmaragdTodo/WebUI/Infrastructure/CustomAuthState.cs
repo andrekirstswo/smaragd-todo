@@ -6,7 +6,8 @@ using NetcodeHub.Packages.Extensions.LocalStorage;
 
 namespace WebUI.Infrastructure;
 
-public class CustomAuthState : AuthenticationStateProvider
+public class 
+    CustomAuthState : AuthenticationStateProvider
 {
     private readonly ILocalStorageService _localStorageService;
 
@@ -19,19 +20,22 @@ public class CustomAuthState : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // TODO Eventuell try catch
-        var token = await _localStorageService.GetItemAsStringAsync(Core.Constants.Token.Key);
-        if (string.IsNullOrEmpty(token))
+        var tokenString = await _localStorageService.GetItemAsStringAsync(Core.Constants.Token.Key);
+        
+        if (string.IsNullOrEmpty(tokenString))
         {
             return await Task.FromResult(new AuthenticationState(_claimsPrincipal));
         }
-        
-        var tokenModel = JsonSerializer.Deserialize<Token>(token);
-        _claimsPrincipal = SetClaimPrincipal(tokenModel!.UserId);
+
+        var token = JsonSerializer.Deserialize<Token>(tokenString);
+
+        ArgumentNullException.ThrowIfNull(token);
+
+        _claimsPrincipal = SetClaimPrincipal(token.UserId);
         return await Task.FromResult(new AuthenticationState(_claimsPrincipal));
     }
 
-    private ClaimsPrincipal SetClaimPrincipal(string userId)
+    private static ClaimsPrincipal SetClaimPrincipal(string userId)
     {
         var claims = new[]
         {

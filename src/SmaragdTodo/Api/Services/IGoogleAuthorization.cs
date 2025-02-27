@@ -2,10 +2,12 @@
 using Api.Database;
 using Core.Database.Models;
 using Core.Infrastructure;
+using Core.Models;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Api.Services;
@@ -14,7 +16,7 @@ public interface IGoogleAuthorization
 {
     string GetAuthorizationUrl();
     Task<UserCredential> ExchangeCodeForToken(string code, CancellationToken cancellationToken = default);
-    Task<UserCredential> ValidateToken(string accessToken, CancellationToken cancellationToken = default);
+    Task<UserCredential> ValidateToken(Token token, CancellationToken cancellationToken = default);
 }
 
 public class GoogleAuthorization : IGoogleAuthorization
@@ -22,17 +24,20 @@ public class GoogleAuthorization : IGoogleAuthorization
     private readonly SmaragdTodoContext _dbContext;
     private readonly IGoogleAuthHelper _googleAuthHelper;
     private readonly IDateTimeProvider _dateTimeProvider;
+    private readonly HybridCache _hybridCache;
     private readonly string? _redurectUri;
 
     public GoogleAuthorization(
         SmaragdTodoContext dbContext,
         IGoogleAuthHelper googleAuthHelper,
         IConfiguration configuration,
-        IDateTimeProvider dateTimeProvider)
+        IDateTimeProvider dateTimeProvider,
+        HybridCache hybridCache)
     {
         _dbContext = dbContext;
         _googleAuthHelper = googleAuthHelper;
         _dateTimeProvider = dateTimeProvider;
+        _hybridCache = hybridCache;
         _redurectUri = configuration["Authentication:Google:RedirectUri"];
     }
 
@@ -103,7 +108,7 @@ public class GoogleAuthorization : IGoogleAuthorization
             _dbContext.Users.Update(user);
         }
 
-        _dbContext.Credentials.Add(new Credential
+        var credential = new Credential
         {
             Id = Guid.NewGuid().ToString(),
             AccessToken = token.AccessToken,
@@ -112,18 +117,40 @@ public class GoogleAuthorization : IGoogleAuthorization
             IdToken = token.IdToken,
             IssuedUtc = token.IssuedUtc,
             UserId = userId
-        });
+        };
+        await _hybridCache.SetAsync(
+            CreateAccessTokenCacheKey(token.AccessToken),
+            credential,
+            DefaultHybridCacheEntryOptions(),
+            cancellationToken: cancellationToken);
+        _dbContext.Credentials.Add(credential);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var userCredential = new UserCredential(flow, "user", token);
         return userCredential;
     }
 
-    public async Task<UserCredential> ValidateToken(string accessToken, CancellationToken cancellationToken = default)
+    private static HybridCacheEntryOptions DefaultHybridCacheEntryOptions() =>
+        new HybridCacheEntryOptions
+        {
+            Expiration = TimeSpan.FromMinutes(1)
+        };
+
+    public async Task<UserCredential> ValidateToken(Token token, CancellationToken cancellationToken = default)
     {
-        var credential = await _dbContext.Credentials
-            .Where(u => u.AccessToken == accessToken)
-            .FirstAsync(cancellationToken);
+        var accessToken = token.AccessToken;
+
+        var cacheKey = CreateAccessTokenCacheKey(accessToken);
+        var credential = await _hybridCache.GetOrCreateAsync(
+            cacheKey,
+            async cancel =>
+            {
+                return await _dbContext.Credentials
+                    .Where(u => u.AccessToken == accessToken)
+                    .FirstAsync(cancel);
+            },
+            DefaultHybridCacheEntryOptions(),
+            cancellationToken: cancellationToken);
 
         ArgumentNullException.ThrowIfNull(credential);
 
@@ -145,4 +172,6 @@ public class GoogleAuthorization : IGoogleAuthorization
 
         return new UserCredential(flow, "user", tokenResponse);
     }
+
+    private static string CreateAccessTokenCacheKey(string accessToken) => $"AccessToken:{accessToken}";
 }

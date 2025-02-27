@@ -1,7 +1,5 @@
 ﻿@page "/weather"
-@using System.Text.Json
 @using Core.Models
-@using System.Net.Http.Headers
 
 <PageTitle>Boards</PageTitle>
 
@@ -33,19 +31,10 @@ else
 }
 
 @code {
-    private GetBoardsDto[]? _boards;
+    private List<GetBoardsDto>? _boards;
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await LocalStorageService.GetItemAsStringAsync(Core.Constants.Token.Key);
-
-        if (!string.IsNullOrEmpty(token))
-        {
-            var client = HttpClientFactory.CreateClient(Constants.ApiClient);
-            var tokenModel = JsonSerializer.Deserialize<Token>(token);
-            ArgumentNullException.ThrowIfNull(tokenModel);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenModel.AccessToken);
-            _boards = await client.GetFromJsonAsync<GetBoardsDto[]>("api/Board") ?? Array.Empty<GetBoardsDto>();
-        }
+        _boards = await ApiClient.GetBoardsAsync();
     }
 }

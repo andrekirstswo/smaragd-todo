@@ -43,6 +43,7 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpGet("token/{userId}")]
+    [ProducesResponseType(typeof(Token), 200)]
     [AllowAnonymous]
     public async Task<IActionResult> GetAccessToken(string userId, CancellationToken cancellationToken = default)
     {

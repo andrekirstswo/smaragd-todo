@@ -1,16 +1,15 @@
 ﻿@page "/connect/{id}"
 @using WebUI.Infrastructure
+@using System.Text.Json
 
 @code {
-    public Task<AuthenticationState> AuthState { get; set; }
+    public Task<AuthenticationState> AuthState { get; set; } = default!;
 
     [Parameter]
     public string Id { get; set; } = string.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
-        var client = HttpClientFactory.CreateClient(Constants.ApiClient);
-
         try
         {
             var user = (await AuthState).User;
@@ -29,17 +28,14 @@
             NavManager.NavigateTo("/");
         }
 
-        var response = await client.GetAsync($"api/Authentication/token/{Id}");
-
-        if (response.IsSuccessStatusCode)
-        {
-            var accessToken = await response.Content.ReadAsStringAsync();
-            await LocalStorageService.SaveAsStringAsync(Core.Constants.Token.Key, accessToken);
-            var authState = (CustomAuthState)AuthStateProvider;
-            authState.NotifyAuthStateChanged();
-            NavManager.NavigateTo("/", true);
-        }
-
-        NavManager.NavigateTo("/");
+        var token = await ApiClient.GetAuthenticationTokenForUserId(Id);
+        // Console.WriteLine(token);
+        await LocalStorageService.SaveAsStringAsync(Core.Constants.Token.Key, JsonSerializer.Serialize(token));
+        // await LocalStorageService.(Core.Constants.Token.Key, JsonSerializer.Serialize(token));
+        
+        var authState = (CustomAuthState)AuthStateProvider;
+        
+        authState.NotifyAuthStateChanged();
+        NavManager.NavigateTo("/", true);
     }
 }

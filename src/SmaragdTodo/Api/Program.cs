@@ -6,8 +6,6 @@ using Core.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Scalar.AspNetCore;
@@ -20,6 +18,11 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.AddServiceDefaults();
+        builder.AddRedisDistributedCache("apicache");
+
+#pragma warning disable EXTEXP0018 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        builder.Services.AddHybridCache();
+#pragma warning restore EXTEXP0018 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
@@ -29,11 +32,11 @@ public class Program
         builder.Services
             .AddOptions<GoogleAuthenticationOptions>()
             .BindConfiguration("Authentication:Google");
+
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddMediatR(options =>
         {
             options.RegisterServicesFromAssemblyContaining<Program>();
-
             options.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
         builder.Services.AddValidatorsFromAssemblyContaining<Program>();

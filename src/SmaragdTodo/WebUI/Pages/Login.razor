@@ -6,14 +6,10 @@
 {
     async Task LoginAsync()
     {
-        var client = HttpClientFactory.CreateClient(Constants.ApiClient);
-        var result = await client.GetAsync("api/Authentication");
+        var url = await ApiClient.GetAuthenticationUrl();
 
-        if (result.IsSuccessStatusCode)
-        {
-            var url = await result.Content.ReadAsStringAsync();
-            ArgumentException.ThrowIfNullOrEmpty(url);
-            NavManager.NavigateTo(url);
-        }
+        ArgumentException.ThrowIfNullOrEmpty(url);
+        
+        NavManager.NavigateTo(url);
     }
 }
