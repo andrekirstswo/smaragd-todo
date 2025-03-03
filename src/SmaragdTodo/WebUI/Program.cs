@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 using NetcodeHub.Packages.Extensions.LocalStorage;
 using WebUI.Infrastructure;
 
@@ -26,6 +27,8 @@ public class Program
         builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthState>();
         builder.Services.AddAuthorizationCore();
         builder.Services.AddNetcodeHubLocalStorageService();
+
+        builder.Services.AddMudServices();
 
         await builder.Build().RunAsync();
     }

@@ -1,4 +1,6 @@
-﻿using Api.Features.Board.CreateBoard;
+﻿using System.Net;
+using Api.Features.Board.CreateBoard;
+using Api.Features.Board.GetBoards;
 using Core.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +21,8 @@ public class BoardController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateBoardModel model)
+    [ProducesResponseType(typeof(CreateBoardResponseDto), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> Create([FromBody] CreateBoardDto model)
     {
         var result = await _mediator.Send(new CreateBoardRequest
         {
@@ -27,7 +30,7 @@ public class BoardController : ControllerBase
         });
 
         return result.IsSuccess
-            ? Accepted(result.Value!.Url, new { requestStatusUrl = result.Value!.Url })
+            ? Accepted(result.Value!.StatusUrl, new { requestStatusUrl = result.Value!.StatusUrl })
             : BadRequest(result.Error);
     }
 
@@ -38,22 +41,12 @@ public class BoardController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetAll()
+    [ProducesResponseType(typeof(List<GetBoardsDto>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> Get()
     {
-        var boards = new List<GetBoardsDto>
-        {
-            new GetBoardsDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "Test1"
-            },
-            new GetBoardsDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "Test2"
-            }
-        };
+        var result = await _mediator.Send(new GetBoardsRequest());
+        var boards = result.Value;
 
-        return Ok(boards);
+        return boards != null && boards.Any() ? Ok(result.Value) : NoContent();
     }
 }

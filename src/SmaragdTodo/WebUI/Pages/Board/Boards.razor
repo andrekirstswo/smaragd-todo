@@ -1,0 +1,11 @@
+﻿@attribute [Route(NavigationRoutes.Boards.Base)]
+
+<PageTitle>My Boards</PageTitle>
+
+<div>
+    <NavLink href="/boards/create">
+        <MudButton Variant="Variant.Filled">Create</MudButton>
+    </NavLink>
+</div>
+
+<BoardCards />

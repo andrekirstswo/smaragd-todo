@@ -65,18 +65,6 @@ public class AuthenticationController : ControllerBase
     }
 }
 
-public class LoginRequest
-{
-    public string? AccessToken { get; set; }
-}
-
-public class LoginResponse
-{
-    public string AccessToken { get; set; } = default!;
-    public string? RefreshToken { get; set; }
-    public LoginResponseUser? User { get; set; }
-}
-
 public class LoginResponseUser
 {
     public string Id { get; set; } = default!;

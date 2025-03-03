@@ -1,0 +1,28 @@
+﻿@if (IsLoading())
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else
+{
+    <MudGrid>
+        @foreach (var model in _boardCardViewModels!)
+        {
+            <MudItem xs="4">
+                <BoardCard Model="model"></BoardCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private List<BoardCardViewModel>? _boardCardViewModels;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _boardCardViewModels = null;
+        var boards = await ApiClient.GetBoardsAsync();
+        _boardCardViewModels = boards.Select(BoardCardViewModel.Map).ToList();
+    }
+
+    private bool IsLoading() => _boardCardViewModels == null;
+}

@@ -1,0 +1,50 @@
+﻿@using Core.Models
+@attribute [Route(NavigationRoutes.Boards.Create)]
+@implements IDisposable
+
+<h3>Create</h3>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors" Model="@_model">
+                <MudTextField @bind-Value="_model.Name" Label="Board name" Required="true" RequiredError="Board name is required" />
+                
+                <div class="d-flex align-center justify-space-between">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" Class="ml-auto" @onclick="CreateAsync">Create</MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Typo="Typo.subtitle2">@($"Errors ({_errors.Length})")</MudText>
+            @foreach (var error in _errors)
+            {
+                <MudText Color="@Color.Error">@error</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    bool _success;
+    string[] _errors = Array.Empty<string>();
+    MudForm _form;
+    CreateBoardDto _model = new CreateBoardDto();
+    
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    async Task CreateAsync()
+    {
+        await _form.Validate();
+
+        await ApiClient.CreateBoardAsync(_model, _cancellationTokenSource.Token);
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+}

@@ -7,7 +7,6 @@ using Events;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using User = Core.Database.Models.User;
 
 namespace Functions.Board.CreateBoard;
 
@@ -40,9 +39,8 @@ public class BackgroundWorker
 
         var database = _cosmosClient.GetDatabase(Constants.DatabaseName);
         var boardsContainer = database.GetContainer(ContainerNames.Boards);
-        var usersContainer = database.GetContainer(ContainerNames.Users);
 
-        var userId = await GetUserIdByEmail(usersContainer, createBoardRequest.Owner);
+        var userId = createBoardRequest.Owner;
         ArgumentException.ThrowIfNullOrEmpty(userId);
 
         var board = new Core.Database.Models.Board
@@ -82,54 +80,5 @@ public class BackgroundWorker
                 throw new Exception("Could not create item in db");
             }
         }
-    }
-
-    private static async Task<string?> GetUserIdByEmail(Container container, string email, CancellationToken cancellationToken = default)
-    {
-        return await container.Get<string, User>(
-            "SELECT * FROM c WHERE c.email = @email",
-            item => item.Id,
-            new Dictionary<string, object>
-            {
-                { "@email", email.ToLower() }
-            },
-            cancellationToken);
-    }
-}
-
-// TODO In own class
-public static class ContainerExtensions
-{
-    public static async Task<TResult?> Get<TResult, TEntity>(
-        this Container container,
-        string sql,
-        Func<TEntity, TResult> select,
-        Dictionary<string, object>? parameters = null,
-        CancellationToken cancellationToken = default)
-    {
-        var query = new QueryDefinition(sql);
-
-        if (parameters is not null)
-        {
-            foreach (var parameter in parameters)
-            {
-                query = query
-                    .WithParameter(parameter.Key, parameter.Value);
-            }
-        }
-
-        using var resultSet = container.GetItemQueryIterator<TEntity>(query);
-
-        if (!resultSet.HasMoreResults)
-        {
-            return default;
-        }
-
-        foreach (var item in await resultSet.ReadNextAsync(cancellationToken))
-        {
-            return select(item);
-        }
-
-        return default;
     }
 }

@@ -1,0 +1,21 @@
+﻿<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Model.Name</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent></MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="NavigateToBoard">View</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter]
+    public BoardCardViewModel Model { get; set; } = new BoardCardViewModel();
+
+    void NavigateToBoard()
+    {
+        NavManager.NavigateTo(NavigationRoutes.Boards.ById(Model.Id));
+    }
+}

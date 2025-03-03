@@ -25,7 +25,7 @@ public class GoogleAuthorization : IGoogleAuthorization
     private readonly IGoogleAuthHelper _googleAuthHelper;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly HybridCache _hybridCache;
-    private readonly string? _redurectUri;
+    private readonly string? _redirectUri;
 
     public GoogleAuthorization(
         SmaragdTodoContext dbContext,
@@ -38,7 +38,7 @@ public class GoogleAuthorization : IGoogleAuthorization
         _googleAuthHelper = googleAuthHelper;
         _dateTimeProvider = dateTimeProvider;
         _hybridCache = hybridCache;
-        _redurectUri = configuration["Authentication:Google:RedirectUri"];
+        _redirectUri = configuration["Authentication:Google:RedirectUri"];
     }
 
     public string GetAuthorizationUrl() =>
@@ -49,7 +49,7 @@ public class GoogleAuthorization : IGoogleAuthorization
                     Scopes = _googleAuthHelper.GetScopes(),
                     Prompt = OpenIdConnectPrompt.Consent
                 })
-            .CreateAuthorizationCodeRequest(_redurectUri)
+            .CreateAuthorizationCodeRequest(_redirectUri)
             .Build()
             .ToString();
 
@@ -62,7 +62,7 @@ public class GoogleAuthorization : IGoogleAuthorization
                 Scopes = _googleAuthHelper.GetScopes()
             });
 
-        var token = await flow.ExchangeCodeForTokenAsync("user", code, _redurectUri, cancellationToken);
+        var token = await flow.ExchangeCodeForTokenAsync("user", code, _redirectUri, cancellationToken);
 
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(token.IdToken);
@@ -126,8 +126,7 @@ public class GoogleAuthorization : IGoogleAuthorization
         _dbContext.Credentials.Add(credential);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var userCredential = new UserCredential(flow, "user", token);
-        return userCredential;
+        return new UserCredential(flow, "user", token);
     }
 
     private static HybridCacheEntryOptions DefaultHybridCacheEntryOptions() =>

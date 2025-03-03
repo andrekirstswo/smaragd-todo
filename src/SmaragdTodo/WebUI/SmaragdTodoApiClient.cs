@@ -26,4 +26,16 @@ public class SmaragdTodoApiClient
     {
         return _httpClient.GetStringAsync("api/Authentication", cancellationToken);
     }
+
+    public async Task<CreateBoardResponseDto> CreateBoardAsync(CreateBoardDto dto, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/Board", dto, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<CreateBoardResponseDto>(cancellationToken) ?? new CreateBoardResponseDto();
+        }
+
+        throw new NotImplementedException();
+    }
 }

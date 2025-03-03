@@ -36,12 +36,25 @@ public class SmaragdTodoContext : DbContext
             .OwnsMany(p => p.Accesses, builder =>
             {
                 builder.ToJsonProperty("accesses");
+                
+                builder
+                    .Property(p => p.UserId)
+                    .ToJsonProperty("userId");
+
+                builder
+                    .Property(p => p.Role)
+                    .ToJsonProperty("role");
             });
 
         modelBuilder
             .Entity<Board>()
             .Property(p => p.Name)
             .ToJsonProperty("name");
+
+        modelBuilder
+            .Entity<Board>()
+            .Property(p => p.Owner)
+            .ToJsonProperty("owner");
 
         modelBuilder
             .Entity<User>()

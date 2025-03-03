@@ -1,0 +1,8 @@
+﻿@page "/boards/{Id}"
+
+<h3>Board with Id: @Id</h3>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = default!;
+}
