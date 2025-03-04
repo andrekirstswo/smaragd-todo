@@ -125,7 +125,7 @@ public class Program
 
         app.MapControllers();
 
-        app.MapHub<NotificationHub>("/notifications");
+        app.MapHub<NotificationHub>($"/{SignalRHubNames.Notifications}");
 
         app.UseMiddleware<ValidationExceptionHandlingMiddleware>();
 

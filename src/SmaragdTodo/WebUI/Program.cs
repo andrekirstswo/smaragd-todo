@@ -27,6 +27,8 @@ public class Program
         builder.Services.AddAuthorizationCore();
         builder.Services.AddNetcodeHubLocalStorageService();
         builder.Services.AddScoped<ITokenProvider, TokenProvider>();
+        builder.Services.AddScoped<NotificationBus>();
+        builder.Services.AddScoped<SignalRService>();
 
         builder.Services.AddMudServices();
 

@@ -3,16 +3,16 @@
 @using Core
 @using System.Net
 @using global::Notifications
-@implements IAsyncDisposable
+@implements IDisposable
 
 <MudBadge
-    Content="@numberOfItems"
-    Overlap="true"
-    Class="mx-6 my-4">
+Content="@_numberOfItems"
+Overlap="true"
+Class="mx-6 my-4">
     <MudMenu
-        Color="Color.Inherit"
-        Size="Size.Medium"
-        Icon="@Icons.Material.Filled.NotificationsNone">
+    Color="Color.Inherit"
+    Size="Size.Medium"
+    Icon="@Icons.Material.Filled.NotificationsNone">
         @foreach (var notification in _notifications)
         {
             @if (notification is BoardCreatedNotification boardCreatedNotification)
@@ -27,35 +27,22 @@
 {
     private HubConnection? _hubConnection;
     private readonly List<Notification> _notifications = new List<Notification>();
-    int numberOfItems = 0;
+    int _numberOfItems = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await TokenProvider.GetTokenAsStringAsync();
-
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:7259/notifications", options =>
-            {
-                options.AccessTokenProvider = () => Task.FromResult(token.Value);
-            })
-            .Build();
-
-        _hubConnection.On<BoardCreatedNotification>(nameof(INotificationHubClient.ReceiveBoardCreatedNotification), notification =>
-        {
-            _notifications.Add(notification);
-            numberOfItems++;
-
-            InvokeAsync(StateHasChanged);
-        });
-
-        await _hubConnection.StartAsync();
+        NotificationBus.Subscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task OnBoardCreatedNotification(BoardCreatedNotification notification)
     {
-        if (_hubConnection is not null)
-        {
-            await _hubConnection.DisposeAsync();
-        }
+        _notifications.Add(notification);
+        _numberOfItems++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NotificationBus.Unsubscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
     }
 }
