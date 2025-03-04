@@ -1,33 +1,29 @@
 ﻿using System.Security.Claims;
-using System.Text.Json;
-using Core.Models;
 using Microsoft.AspNetCore.Components.Authorization;
-using NetcodeHub.Packages.Extensions.LocalStorage;
 
 namespace WebUI.Infrastructure;
 
 public class 
     CustomAuthState : AuthenticationStateProvider
 {
-    private readonly ILocalStorageService _localStorageService;
-
+    private readonly ITokenProvider _tokenProvider;
     private ClaimsPrincipal _claimsPrincipal = new(new ClaimsIdentity());
 
-    public CustomAuthState(ILocalStorageService localStorageService)
+    public CustomAuthState(ITokenProvider tokenProvider)
     {
-        _localStorageService = localStorageService;
+        _tokenProvider = tokenProvider;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var tokenString = await _localStorageService.GetItemAsStringAsync(Core.Constants.Token.Key);
-        
-        if (string.IsNullOrEmpty(tokenString))
+        var result = await _tokenProvider.GetTokenAsync();
+
+        if (!result.IsSuccess || result.Value is null)
         {
             return await Task.FromResult(new AuthenticationState(_claimsPrincipal));
         }
 
-        var token = JsonSerializer.Deserialize<Token>(tokenString);
+        var token = result.Value;
 
         ArgumentNullException.ThrowIfNull(token);
 

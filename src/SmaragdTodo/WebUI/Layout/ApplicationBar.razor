@@ -1,0 +1,24 @@
+﻿<MudAppBar Elevation="10">
+    <MudIconButton
+        Color="Color.Inherit"
+        Edge="Edge.Start"
+        Icon="@Icons.Material.Filled.Menu"
+        @onclick="ToggleDrawer" />
+    <MudSpacer />
+    
+    <Notifications />
+</MudAppBar>
+
+<MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    <NavMenu />
+</MudDrawer>
+
+@code
+{
+    bool _drawerOpen = true;
+
+    void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

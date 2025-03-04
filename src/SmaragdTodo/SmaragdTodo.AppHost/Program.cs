@@ -5,6 +5,10 @@ var apicache = builder
     .WithAccessKeyAuthentication()
     .RunAsContainer();
 
+var signalr = builder.ExecutionContext.IsPublishMode
+    ? builder.AddAzureSignalR("signalr")
+    : builder.AddConnectionString("signalr");
+
 var cosmosDb = builder.ExecutionContext.IsPublishMode
     ? builder
         .AddAzureCosmosDB("cosmosdb")
@@ -19,16 +23,19 @@ builder
     .AddAzureFunctionsProject<Projects.Functions>("functions")
     .WithExternalHttpEndpoints()
     .WithReference(serviceBus)
-    .WithReference(cosmosDb);
+    .WithReference(cosmosDb)
+    .WithReference(signalr);
 
 var api = builder.AddProject<Projects.Api>("apiservice")
     .WithReference(serviceBus)
     .WithReference(cosmosDb)
-    .WithReference(apicache);
+    .WithReference(apicache)
+    .WithReference(signalr);
 
 builder.AddProject<Projects.WebUI>("webui")
     .WithExternalHttpEndpoints()
     .WithReference(api)
-    .WaitFor(api);
+    .WaitFor(api)
+    .WithReference(signalr);
 
 builder.Build().Run();

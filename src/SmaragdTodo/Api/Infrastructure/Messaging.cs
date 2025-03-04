@@ -31,7 +31,7 @@ public class Messaging : IMessaging
             message.ApplicationProperties.Add(additionalApplicationProperty.Key, additionalApplicationProperty.Value);
         }
 
-        var eventAttribute = @event.GetType().GetCustomAttribute(typeof(EventAttribute)) as EventAttribute;
+        var eventAttribute = @event.GetType().GetCustomAttribute<EventAttribute>();
         ArgumentNullException.ThrowIfNull(eventAttribute);
 
         var sender = _serviceBusClient.CreateSender(eventAttribute.QueueName);

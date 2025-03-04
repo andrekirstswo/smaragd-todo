@@ -1,3 +1,3 @@
 ﻿namespace Events;
 
-public record Event;
+public record Event(DateTimeOffset CreatedAt);

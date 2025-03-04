@@ -18,6 +18,10 @@ builder.AddAzureCosmosClient(ConnectionNames.CosmosDb, configureClientOptions: o
 builder.AddAzureBlobClient(ConnectionNames.Blobs);
 builder.AddAzureServiceBusClient(ConnectionNames.Messaging);
 
+builder.Services
+    .AddSignalR()
+    .AddNamedAzureSignalR("signalr");
+
 builder.ConfigureFunctionsWebApplication();
 
 builder.Build().Run();

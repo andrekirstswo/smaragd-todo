@@ -13,5 +13,5 @@ public class BaseEntity
 
     [JsonPropertyName("createdAt")]
     [JsonProperty("createdAt")]
-    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

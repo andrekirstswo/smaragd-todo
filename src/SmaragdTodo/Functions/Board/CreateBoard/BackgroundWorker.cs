@@ -7,6 +7,7 @@ using Events;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Notifications;
 
 namespace Functions.Board.CreateBoard;
 
@@ -27,7 +28,8 @@ public class BackgroundWorker
     }
 
     [Function(nameof(BackgroundWorker))]
-    public async Task Run(
+    [ServiceBusOutput(QueueNames.Board.CreatedNotification, Connection = ConnectionNames.Messaging)]
+    public async Task<BoardCreatedNotification> Run(
         [ServiceBusTrigger(QueueNames.Board.Created, Connection = ConnectionNames.Messaging)]
         ServiceBusReceivedMessage message,
         ServiceBusMessageActions messageActions)
@@ -66,19 +68,17 @@ public class BackgroundWorker
         if (success)
         {
             await messageActions.CompleteMessageAsync(message);
+
             _logger.LogInformation("Message {requestId} successfully completed", requestId);
+            return new BoardCreatedNotification(createBoardRequest.BoardId, createBoardRequest.Name, createBoardRequest.Owner);
         }
-        else
+
+        if (message.DeliveryCount >= 10)
         {
-            if (message.DeliveryCount >= 10)
-            {
-                await messageActions.DeadLetterMessageAsync(message, deadLetterReason: "Delivery count reached");
-                _logger.LogWarning("Message moved to Dead-Letter-Queue");
-            }
-            else
-            {
-                throw new Exception("Could not create item in db");
-            }
+            await messageActions.DeadLetterMessageAsync(message, deadLetterReason: "Delivery count reached");
+            _logger.LogWarning("Message moved to Dead-Letter-Queue");
         }
+        
+        throw new Exception("Could not create item in db");
     }
 }

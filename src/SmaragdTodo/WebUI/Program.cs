@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -27,31 +26,10 @@ public class Program
         builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthState>();
         builder.Services.AddAuthorizationCore();
         builder.Services.AddNetcodeHubLocalStorageService();
+        builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 
         builder.Services.AddMudServices();
 
         await builder.Build().RunAsync();
-    }
-}
-
-public class AuthHandler : DelegatingHandler
-{
-    private readonly ILocalStorageService _localStorageService;
-
-    public AuthHandler(ILocalStorageService localStorageService)
-    {
-        _localStorageService = localStorageService;
-    }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var token = await _localStorageService.GetItemAsStringAsync(Core.Constants.Token.Key);
-
-        if (!string.IsNullOrEmpty(token))
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
-
-        return await base.SendAsync(request, cancellationToken);
     }
 }

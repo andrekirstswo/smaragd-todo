@@ -14,7 +14,7 @@
 @code {
     async Task LogoutAsync()
     {
-        await LocalStorageService.DeleteItemAsync(Core.Constants.Token.Key);
+        await TokenProvider.DeleteTokenAsync();
         NavManager.NavigateTo("/", true);
     }
 }

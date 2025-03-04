@@ -42,6 +42,12 @@ public class Program
         builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
         builder.Services
+            .AddSignalR()
+            .AddNamedAzureSignalR("signalr");
+        builder.Services.AddSingleton<NotificationHub>();
+        builder.AddAzureServiceBusClient(ConnectionNames.Messaging);
+
+        builder.Services
             .AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = Core.Constants.Token.Scheme;
@@ -67,6 +73,8 @@ public class Program
         builder.Services.AddAuthorization();
         builder.Services.AddScoped<IGoogleAuthHelper, GoogleAuthHelper>();
         builder.Services.AddScoped<IGoogleAuthorization, GoogleAuthorization>();
+        
+        builder.Services.AddHostedService<NotificationBackgroundWorker>();
 
         builder.Services.AddDbContext<SmaragdTodoContext>(options =>
         {
@@ -116,6 +124,8 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        app.MapHub<NotificationHub>("/notifications");
 
         app.UseMiddleware<ValidationExceptionHandlingMiddleware>();
 

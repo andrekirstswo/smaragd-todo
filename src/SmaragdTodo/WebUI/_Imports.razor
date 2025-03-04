@@ -11,8 +11,9 @@
 @using WebUI.Layout
 @using NetcodeHub.Packages.Extensions.LocalStorage
 @using MudBlazor
+@using WebUI.Infrastructure
 
 @inject NavigationManager NavManager
-@inject ILocalStorageService LocalStorageService
+@inject ITokenProvider TokenProvider
 @inject AuthenticationStateProvider AuthStateProvider
 @inject SmaragdTodoApiClient ApiClient

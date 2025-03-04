@@ -1,6 +1,7 @@
 ﻿using Api.Extensions;
 using Api.Infrastructure;
 using Core;
+using Core.Infrastructure;
 using Core.Models;
 using Events;
 using MediatR;
@@ -11,15 +12,18 @@ public class CreateBoardRequestHandler : IRequestHandler<CreateBoardRequest, Res
 {
     private readonly IMessaging _messaging;
     private readonly LinkGenerator _linkGenerator;
+    private readonly IDateTimeProvider _dateTimeProvider;
     private readonly HttpContext _httpContext;
 
     public CreateBoardRequestHandler(
         IHttpContextAccessor httpContextAccessor,
         IMessaging messaging,
-        LinkGenerator linkGenerator)
+        LinkGenerator linkGenerator,
+        IDateTimeProvider dateTimeProvider)
     {
         _messaging = messaging;
         _linkGenerator = linkGenerator;
+        _dateTimeProvider = dateTimeProvider;
         ArgumentNullException.ThrowIfNull(httpContextAccessor.HttpContext);
         _httpContext = httpContextAccessor.HttpContext;
     }
@@ -33,7 +37,7 @@ public class CreateBoardRequestHandler : IRequestHandler<CreateBoardRequest, Res
 
         var owner = _httpContext.User.UserId();
 
-        var @event = new BoardCreatedEvent(requestId, request.Name, owner);
+        var @event = new BoardCreatedEvent(requestId, request.Name, owner, _dateTimeProvider.UtcNow);
 
         var applicationProperties = new Dictionary<string, object>
         {

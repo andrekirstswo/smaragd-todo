@@ -31,7 +31,7 @@
     bool _success;
     string[] _errors = Array.Empty<string>();
     MudForm _form;
-    CreateBoardDto _model = new CreateBoardDto();
+    readonly CreateBoardDto _model = new CreateBoardDto();
     
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -39,7 +39,8 @@
     {
         await _form.Validate();
 
-        await ApiClient.CreateBoardAsync(_model, _cancellationTokenSource.Token);
+        var response = await ApiClient.CreateBoardAsync(_model, _cancellationTokenSource.Token);
+        
     }
 
     public void Dispose()

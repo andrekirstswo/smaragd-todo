@@ -1,0 +1,9 @@
+﻿@using global::Notifications
+
+<MudMenuItem Label="@($"Board {Notification.Name} created")" />
+
+@code
+{
+    [Parameter]
+    public BoardCreatedNotification Notification { get; set; } = default!;
+}

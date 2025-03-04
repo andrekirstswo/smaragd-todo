@@ -116,7 +116,8 @@ public class GoogleAuthorization : IGoogleAuthorization
             ExpiresInSeconds = token.ExpiresInSeconds,
             IdToken = token.IdToken,
             IssuedUtc = token.IssuedUtc,
-            UserId = userId
+            UserId = userId,
+            CreatedAt = _dateTimeProvider.UtcNow
         };
         await _hybridCache.SetAsync(
             CreateAccessTokenCacheKey(token.AccessToken),
