@@ -41,6 +41,7 @@
 
         var response = await ApiClient.CreateBoardAsync(_model, _cancellationTokenSource.Token);
         
+        NavManager.NavigateTo(NavigationRoutes.Boards.Base);
     }
 
     public void Dispose()

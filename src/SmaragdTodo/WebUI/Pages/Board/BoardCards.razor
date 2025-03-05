@@ -1,4 +1,8 @@
-﻿@if (IsLoading())
+﻿@using System.Linq;
+@using Notifications
+@implements IDisposable
+
+@if (IsLoading())
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
@@ -8,7 +12,7 @@ else
         @foreach (var model in _boardCardViewModels!)
         {
             <MudItem xs="4">
-                <BoardCard Model="model"></BoardCard>
+                <BoardCard Model="model" />
             </MudItem>
         }
     </MudGrid>
@@ -22,7 +26,31 @@ else
         _boardCardViewModels = null;
         var boards = await ApiClient.GetBoardsAsync();
         _boardCardViewModels = boards.Select(BoardCardViewModel.Map).ToList();
+
+        NotificationBus.Subscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
+    }
+
+    private async Task OnBoardCreatedNotification(BoardCreatedNotification notification)
+    {
+        _boardCardViewModels ??= new List<BoardCardViewModel>();
+
+        if (_boardCardViewModels.All(t => t.Id != notification.BoardId))
+        {
+            _boardCardViewModels.Add(new BoardCardViewModel
+                {
+                    Id = notification.BoardId,
+                    Name = notification.Name
+                });
+            
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private bool IsLoading() => _boardCardViewModels == null;
+
+    public void Dispose()
+    {
+        NotificationBus.Unsubscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
+    }
+
 }

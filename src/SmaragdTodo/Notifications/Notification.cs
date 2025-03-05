@@ -1,6 +1,3 @@
-﻿using Core;
+﻿namespace Notifications;
 
-namespace Notifications;
-
-[Notification(QueueNames.Board.CreatedNotification)]
 public record Notification;

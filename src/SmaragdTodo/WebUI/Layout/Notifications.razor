@@ -6,9 +6,9 @@
 @implements IDisposable
 
 <MudBadge
-Content="@_numberOfItems"
-Overlap="true"
-Class="mx-6 my-4">
+    Content="@_notifications.Count"
+    Overlap="true"
+    Class="mx-6 my-4">
     <MudMenu
     Color="Color.Inherit"
     Size="Size.Medium"
@@ -27,22 +27,31 @@ Class="mx-6 my-4">
 {
     private HubConnection? _hubConnection;
     private readonly List<Notification> _notifications = new List<Notification>();
-    int _numberOfItems = 0;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         NotificationBus.Subscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
+        NotificationBus.Subscribe<DismissNotificationNotification>(OnNotificationDismissed);
+        
+        return Task.CompletedTask;
     }
 
     private async Task OnBoardCreatedNotification(BoardCreatedNotification notification)
     {
         _notifications.Add(notification);
-        _numberOfItems++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnNotificationDismissed(DismissNotificationNotification notification)
+    {
+        _notifications.Remove(notification.SourceNotification);
+
         await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
         NotificationBus.Unsubscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
+        NotificationBus.Unsubscribe<DismissNotificationNotification>(OnNotificationDismissed);
     }
 }

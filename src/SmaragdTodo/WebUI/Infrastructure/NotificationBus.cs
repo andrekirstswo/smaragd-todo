@@ -34,6 +34,7 @@ public class NotificationBus
         where T : Notification
     {
         var type = typeof(T);
+        
         if (_subscribers.TryGetValue(type, out var subscribtion))
         {
             var tasks = subscribtion
