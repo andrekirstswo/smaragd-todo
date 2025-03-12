@@ -1,11 +1,31 @@
 ﻿@using Core.Models
+@using Notifications
 
-@foreach (var item in Items)
+@if (_items == null)
 {
-    <Section Item="@item"></Section>
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="200px" />
+}
+else
+{
+    @foreach (var item in _items)
+    {
+        <Section Item="@item"></Section>
+    }
 }
 
 @code {
-    [Parameter]
-    public List<BoardSection> Items { get; set; } = new List<BoardSection>();
+    private List<BoardSection>? _items;
+
+    protected override Task OnInitializedAsync()
+    {
+        NotificationBus.Subscribe<BoardReceivedNotification>(OnBoardReceivedNotification);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnBoardReceivedNotification(BoardReceivedNotification notification)
+    {
+        _items = notification.Board.Sections.ToList();
+
+        await InvokeAsync(StateHasChanged);
+    }
 }

@@ -1,6 +1,13 @@
 ﻿@using Notifications
 <div>
-    <MudText Typo="Typo.h6">@_name</MudText>
+    @if (_name == null)
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Text" Height="20px" Width="40%" Animation="Animation.Wave" />
+    }
+    else
+    {
+        <MudText Typo="Typo.h6">@_name</MudText>
+    }
     @* TODO *@
     @* <MudFab Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" IconSize="Size.Small"></MudFab> *@
 </div>
