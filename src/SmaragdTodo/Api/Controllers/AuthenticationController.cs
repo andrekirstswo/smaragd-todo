@@ -1,10 +1,11 @@
-﻿using System.Text.Json;
-using Api.Database;
+﻿using System.Linq.Expressions;
+using System.Text.Json;
 using Api.Services;
+using Core.Database.Models;
 using Core.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Azure.CosmosRepository;
 
 namespace Api.Controllers;
 
@@ -14,14 +15,14 @@ namespace Api.Controllers;
 public class AuthenticationController : ControllerBase
 {
     private readonly IGoogleAuthorization _googleAuthorization;
-    private readonly SmaragdTodoContext _dbContext;
+    private readonly IRepository<Credential> _credentialRepository;
 
     public AuthenticationController(
         IGoogleAuthorization googleAuthorization,
-        SmaragdTodoContext dbContext)
+        IRepository<Credential> credentialRepository)
     {
         _googleAuthorization = googleAuthorization;
-        _dbContext = dbContext;
+        _credentialRepository = credentialRepository;
     }
 
     [HttpGet]
@@ -33,13 +34,25 @@ public class AuthenticationController : ControllerBase
     public async Task<IActionResult> Callback(string code, CancellationToken cancellationToken = default)
     {
         var userCredential = await _googleAuthorization.ExchangeCodeForToken(code, cancellationToken);
-        var user = await _dbContext.Credentials
-            .Where(c => c.AccessToken == userCredential.Token.AccessToken)
-            .FirstOrDefaultAsync(cancellationToken);
-        
-        ArgumentNullException.ThrowIfNull(user);
 
-        return Redirect($"https://localhost:7287/connect/{user.UserId}");
+        var credentials = await _credentialRepository.GetAsync(p => p.AccessToken == userCredential.Token.AccessToken, cancellationToken);
+
+        var list = credentials.ToList();
+        if (!list.Any())
+        {
+            return BadRequest();
+        }
+
+        var userId = list.First().UserId;
+
+        // TODO Remove after test
+        //var user = await _dbContext.Credentials
+        //    .Where(c => c.AccessToken == userCredential.Token.AccessToken)
+        //    .FirstOrDefaultAsync(cancellationToken);
+        
+        ArgumentException.ThrowIfNullOrEmpty(userId);
+
+        return Redirect($"https://localhost:7287/connect/{userId}");
     }
 
     [HttpGet("token/{userId}")]
@@ -47,14 +60,17 @@ public class AuthenticationController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetAccessToken(string userId, CancellationToken cancellationToken = default)
     {
-        var credential = await _dbContext.Credentials
-            .Where(c => c.UserId == userId)
-            .Select(u => new
-            {
-                u.Id,
-                u.AccessToken
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+        Expression<Func<Credential, bool>> expression = p => p.UserId == userId;
+
+        var exists = await _credentialRepository.ExistsAsync(expression, cancellationToken: cancellationToken);
+
+        if (!exists)
+        {
+            return Unauthorized();
+        }
+
+        var credentials = await _credentialRepository.GetAsync(expression, cancellationToken: cancellationToken);
+        var credential = credentials.First();
 
         ArgumentNullException.ThrowIfNull(credential);
         ArgumentException.ThrowIfNullOrEmpty(credential.AccessToken);
@@ -65,6 +81,7 @@ public class AuthenticationController : ControllerBase
     }
 }
 
+// TODO Remove?
 public class LoginResponseUser
 {
     public string Id { get; set; } = default!;

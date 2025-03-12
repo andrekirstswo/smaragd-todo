@@ -1,0 +1,51 @@
+﻿@using Core.Models
+@using Notifications
+
+<MudDropContainer
+    T="TaskItem"
+    @ref="_dropContainer"
+    Items="@_taskItems"
+    ItemsSelector="@((item, column) => item.SectionId == column)"
+    ItemDropped="TaskItemUpdated"
+    Class="d-flex flex-row">
+        <ChildContent>
+            <Sections />
+        </ChildContent>
+</MudDropContainer>
+
+@code {
+    private MudDropContainer<TaskItem> _dropContainer = new MudDropContainer<TaskItem>();
+    private List<TaskItem> _taskItems = new List<TaskItem>();
+    private SectionsViewViewModel _model = new SectionsViewViewModel();
+
+    protected override Task OnInitializedAsync()
+    {
+        NotificationBus.Subscribe<BoardReceivedNotification>(OnBoardReceived);
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnBoardReceived(BoardReceivedNotification notification)
+    {
+        _model = new SectionsViewViewModel
+        {
+            Sections = notification.Board.Sections.ToList()
+        };
+
+        return Task.CompletedTask;
+    }
+
+    private class SectionsViewViewModel
+    {
+        public List<BoardSection> Sections { get; set; } = new List<BoardSection>();
+    }
+
+    private void TaskItemUpdated(MudItemDropInfo<TaskItem> info)
+    {
+        if (info.Item != null)
+        {
+            info.Item.SectionId = info.DropzoneIdentifier;
+        }
+    }
+
+}

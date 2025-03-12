@@ -1,7 +1,11 @@
 ﻿using System.Net;
 using Api.Features.Board.CreateBoard;
+using Api.Features.Board.GetBoardById;
+using Api.Features.Board.GetBoardNameById;
 using Api.Features.Board.GetBoards;
+using Core;
 using Core.Models;
+using Core.Models.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +28,7 @@ public class BoardController : ControllerBase
     [ProducesResponseType(typeof(CreateBoardResponseDto), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> Create([FromBody] CreateBoardDto model)
     {
-        var result = await _mediator.Send(new CreateBoardRequest
+        var result = await _mediator.Send(new CreateBoardCommand
         {
             Name = model.Name
         });
@@ -44,9 +48,37 @@ public class BoardController : ControllerBase
     [ProducesResponseType(typeof(List<GetBoardsDto>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> Get()
     {
-        var result = await _mediator.Send(new GetBoardsRequest());
+        var result = await _mediator.Send(new GetBoardsQuery());
         var boards = result.Value;
 
         return boards != null && boards.Any() ? Ok(result.Value) : NoContent();
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(GetBoardByIdDto), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> Get(string id, CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new GetBoardByIdQuery(BoardId.From(id)), cancellationToken);
+
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id}/name")]
+    [ProducesResponseType(typeof(string), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetNameById(string id, CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new GetBoardNameByIdQuery(BoardId.From(id)), cancellationToken);
+
+        return HandleResult(result);
+    }
+
+    private IActionResult HandleResult<TValue, TError>(Result<TValue, TError> result)
+    {
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(result.Error);
     }
 }

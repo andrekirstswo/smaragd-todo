@@ -1,13 +1,12 @@
 ﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using Api.Database;
 using Api.Services;
 using Core.Database.Models;
 using Core.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Azure.CosmosRepository;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
@@ -20,15 +19,18 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
         ILoggerFactory logger,
         UrlEncoder encoder,
         IGoogleAuthorization googleAuthorization,
-        SmaragdTodoContext dbContext)
+        IRepository<Credential> credentialRepository,
+        IRepository<User> userRepository)
         : base(options, logger, encoder)
     {
         _googleAuthorization = googleAuthorization;
-        _dbContext = dbContext;
+        _credentialRepository = credentialRepository;
+        _userRepository = userRepository;
     }
 
     private readonly IGoogleAuthorization _googleAuthorization;
-    private readonly SmaragdTodoContext _dbContext;
+    private readonly IRepository<Credential> _credentialRepository;
+    private readonly IRepository<User> _userRepository;
 
     protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -57,7 +59,7 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
         ArgumentNullException.ThrowIfNull(token);
         
         var userCredential = await _googleAuthorization.ValidateToken(token);
-        var user = await GetUser(userCredential.Token.AccessToken);
+        var user = await GetUserAsync(userCredential.Token.AccessToken);
         if (user == null)
         {
             return AuthenticateResult.Fail("Invalid access token");
@@ -75,20 +77,27 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
         return AuthenticateResult.Success(authenticationTicket);
     }
 
-    private async Task<User?> GetUser(string accessToken)
+    private async Task<User?> GetUserAsync(string accessToken, CancellationToken cancellationToken = default)
     {
-        var userId = await _dbContext.Credentials
-            .Where(c => c.AccessToken == accessToken)
-            .Select(c => c.UserId)
-            .FirstOrDefaultAsync();
-
-        if (userId is null)
+        var result = await _credentialRepository.GetAsync(p => p.AccessToken == accessToken, cancellationToken);
+        var credentials = result.ToList();
+        
+        if (!credentials.Any())
         {
             return null;
         }
 
-        return await _dbContext.Users
-            .Where(u => u.Id == userId)
-            .FirstOrDefaultAsync();
+        var userId = credentials.First().UserId;
+
+        var existsUser = await _userRepository.ExistsAsync(p => p.UserId == userId, cancellationToken: cancellationToken);
+
+        if (!existsUser)
+        {
+            return null;
+        }
+
+        var users = await _userRepository.GetAsync(p => p.UserId == userId, cancellationToken: cancellationToken);
+
+        return users.First();
     }
 }

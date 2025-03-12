@@ -2,9 +2,9 @@
 
 namespace Api.Features.Board.CreateBoard;
 
-public class CreateBoardRequestValidator : AbstractValidator<CreateBoardRequest>
+public class CreateBoardCommandValidator : AbstractValidator<CreateBoardCommand>
 {
-    public CreateBoardRequestValidator()
+    public CreateBoardCommandValidator()
     {
         RuleFor(p => p.Name)
             .NotNull()

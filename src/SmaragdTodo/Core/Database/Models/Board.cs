@@ -1,19 +1,13 @@
-﻿using System.Text.Json.Serialization;
-using Newtonsoft.Json;
+﻿using Microsoft.Azure.CosmosRepository;
+using Microsoft.Azure.CosmosRepository.Attributes;
 
 namespace Core.Database.Models;
 
-public class Board : BaseEntity
+[PartitionKeyPath("/id")]
+public class Board : FullItem
 {
-    [JsonPropertyName("name")]
-    [JsonProperty("name")]
     public string Name { get; set; } = default!;
-
-    [JsonPropertyName("accesses")]
-    [JsonProperty("accesses")]
-    public IList<BoardUserAccess> Accesses { get; set; } = default!;
-
-    [JsonPropertyName("owner")]
-    [JsonProperty("owner")]
+    public List<BoardUserAccess>? Accesses { get; set; } = new List<BoardUserAccess>();
     public string Owner { get; set; } = default!;
+    public List<BoardSection>? Sections { get; set; } = new List<BoardSection>();
 }

@@ -2,32 +2,28 @@ using System.Net;
 using Azure.Messaging.ServiceBus;
 using Core;
 using Core.Database.Models;
-using Core.Infrastructure;
 using Events;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Notifications;
 
-namespace Functions.Board.CreateBoard;
+namespace Functions.Board;
 
-public class BackgroundWorker
+public class BoardCreatedBackgroundWorker
 {
     private readonly CosmosClient _cosmosClient;
-    private readonly IDateTimeProvider _dateTimeProvider;
-    private readonly ILogger<BackgroundWorker> _logger;
+    private readonly ILogger<BoardCreatedBackgroundWorker> _logger;
 
-    public BackgroundWorker(
+    public BoardCreatedBackgroundWorker(
         CosmosClient cosmosClient,
-        IDateTimeProvider dateTimeProvider,
-        ILogger<BackgroundWorker> logger)
+        ILogger<BoardCreatedBackgroundWorker> logger)
     {
         _cosmosClient = cosmosClient;
-        _dateTimeProvider = dateTimeProvider;
         _logger = logger;
     }
 
-    [Function(nameof(BackgroundWorker))]
+    [Function(nameof(BoardCreatedBackgroundWorker))]
     [ServiceBusOutput(QueueNames.Board.CreatedNotification, Connection = ConnectionNames.Messaging)]
     public async Task<BoardCreatedNotification> Run(
         [ServiceBusTrigger(QueueNames.Board.Created, Connection = ConnectionNames.Messaging)]
@@ -49,7 +45,6 @@ public class BackgroundWorker
         {
             Id = createBoardRequest.BoardId,
             Name = createBoardRequest.Name,
-            CreatedAt = _dateTimeProvider.UtcNow,
             Owner = userId,
             Accesses = new List<BoardUserAccess>
             {
@@ -58,7 +53,13 @@ public class BackgroundWorker
                     UserId = userId,
                     Role = BoardUserAccessRoles.Admin
                 }
-            }
+            },
+            Sections = createBoardRequest.Sections?.Select(s => new BoardSection
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Order = s.Order
+            }).ToList() ?? new List<BoardSection>()
         };
 
         var response = await boardsContainer.UpsertItemAsync(board, new PartitionKey(board.Id));
@@ -70,7 +71,12 @@ public class BackgroundWorker
             await messageActions.CompleteMessageAsync(message);
 
             _logger.LogInformation("Message {requestId} successfully completed", requestId);
-            return new BoardCreatedNotification(createBoardRequest.BoardId, createBoardRequest.Name, createBoardRequest.Owner);
+            
+            return new BoardCreatedNotification(
+                createBoardRequest.BoardId,
+                createBoardRequest.Name,
+                createBoardRequest.Owner,
+                createBoardRequest.Sections ?? new List<Core.Models.BoardSection>());
         }
 
         if (message.DeliveryCount >= 10)

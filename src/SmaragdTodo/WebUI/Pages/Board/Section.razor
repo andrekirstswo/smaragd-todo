@@ -1,0 +1,38 @@
+﻿@using Core.Models
+@using Microsoft.AspNetCore.Components
+
+<MudPaper Elevation="0"
+          Width="100%"
+          MinHeight="400px"
+          Class="pa-4 ma-4 d-flex flex-column mud-background-gray rounded-lg">
+    <MudToolBar Gutters="false">
+        <MudText Typo="Typo.subtitle1"><b>@Item.Name</b></MudText>
+    </MudToolBar>
+    <MudDropZone
+        T="TaskItem"
+        Identifier="@Item.Id"
+        Class="mud-height-full">
+        @* @if (Item.NewTaskOpen)
+        {
+            <MudPaper
+                Elevation="25"
+                Class="pa-2 rounded-lg">
+
+                <MudTextField @bind-Value="Item.NewTaskOpen" Placeholder="New Todo" Underline="false" Margin="Margin.Dense" Class="mx-2 mt-n2"/>
+                <MudButton OnClick="@(() => AddTodoItem(item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">
+                    Add Todo item
+                </MudButton>
+            </MudPaper>
+        }
+        else
+        {
+            <MudButton OnClick="@(() => item.NewTaskOpen = !item.NewTaskOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
+        } *@
+    </MudDropZone>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public BoardSection Item { get; set; } = default!;
+}

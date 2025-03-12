@@ -1,38 +1,39 @@
-﻿using Api.Database;
-using Api.Extensions;
+﻿using Api.Extensions;
+using Api.Infrastructure;
 using Core;
 using Core.Models;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Azure.CosmosRepository;
 
 namespace Api.Features.Board.GetBoards;
 
-public class GetBoardsRequestHandler : IRequestHandler<GetBoardsRequest, Result<List<GetBoardsDto>, Error>>
+public class GetBoardsQueryHandler : QueryHandler<GetBoardsQuery, List<GetBoardsDto>>
 {
-    private readonly SmaragdTodoContext _dbContext;
+    private readonly IRepository<Core.Database.Models.Board> _boardRepository;
     private readonly HttpContext _httpContext;
 
-    public GetBoardsRequestHandler(
+    public GetBoardsQueryHandler(
         IHttpContextAccessor httpContextAccessor,
-        SmaragdTodoContext dbContext)
+        IRepository<Core.Database.Models.Board> boardRepository)
     {
-        _dbContext = dbContext;
+        _boardRepository = boardRepository;
         ArgumentNullException.ThrowIfNull(httpContextAccessor.HttpContext);
         _httpContext = httpContextAccessor.HttpContext;
     }
 
-    public async Task<Result<List<GetBoardsDto>, Error>> Handle(GetBoardsRequest request, CancellationToken cancellationToken)
+    public override async Task<Result<List<GetBoardsDto>, Error>> Handle(GetBoardsQuery request, CancellationToken cancellationToken)
     {
         var userId = _httpContext.User.UserId();
-
-        return await _dbContext.Boards
-            .Where(b => b.Owner == userId ||
-                        b.Accesses.Any(a => a.UserId == userId))
+        var result = await _boardRepository.GetAsync(p =>
+                p.Owner == userId ||
+                (p.Accesses != null && p.Accesses.Any(a => a.UserId == userId)),
+            cancellationToken);
+        
+        return result
             .Select(b => new GetBoardsDto
             {
                 Id = b.Id,
                 Name = b.Name
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 }
