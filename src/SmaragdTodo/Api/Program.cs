@@ -1,14 +1,17 @@
-using Api.Database;
 using Api.Infrastructure;
+using Api.Middlewares;
 using Api.Services;
 using Core;
+using Core.Database.Models;
 using Core.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.CosmosRepository.Options;
 using Microsoft.Extensions.Azure;
 using Scalar.AspNetCore;
+using User = Core.Database.Models.User;
 
 namespace Api;
 
@@ -76,13 +79,33 @@ public class Program
         
         builder.Services.AddHostedService<NotificationBackgroundWorker>();
 
-        builder.Services.AddDbContext<SmaragdTodoContext>(options =>
+        builder.Services.AddCosmosRepository(options =>
         {
-            var connectionString = builder.Configuration.GetConnectionString(ConnectionNames.CosmosDb);
+            options.CosmosConnectionString = builder.Configuration.GetConnectionString(ConnectionNames.CosmosDb);
+            options.DatabaseId = Constants.DatabaseName;
+            options.ContainerPerItemType = true;
+            options.SerializationOptions = new RepositorySerializationOptions
+            {
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+            };
 
-            ArgumentException.ThrowIfNullOrEmpty(connectionString);
+            options.ContainerBuilder.Configure<Board>(containerOptions =>
+            {
+                containerOptions.WithContainer(ContainerNames.Boards);
+                containerOptions.WithPartitionKey("/id");
+            });
 
-            options.UseCosmos(connectionString, Constants.DatabaseName);
+            options.ContainerBuilder.Configure<User>(containerOptions =>
+            {
+                containerOptions.WithContainer(ContainerNames.Users);
+                containerOptions.WithPartitionKey("/authenticationProvider");
+            });
+
+            options.ContainerBuilder.Configure<Credential>(containerOptions =>
+            {
+                containerOptions.WithContainer(ContainerNames.Credentials);
+                containerOptions.WithPartitionKey("/userId");
+            });
         });
 
         builder.Services.AddAzureClients(factoryBuilder =>
@@ -128,10 +151,7 @@ public class Program
         app.MapHub<NotificationHub>($"/{SignalRHubNames.Notifications}");
 
         app.UseMiddleware<ValidationExceptionHandlingMiddleware>();
-
-        using var scope = app.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<SmaragdTodoContext>();
-        await dbContext.Database.EnsureCreatedAsync();
+        app.UseMiddleware<CheckExistsUserMiddleware>();
 
         await app.RunAsync();
     }

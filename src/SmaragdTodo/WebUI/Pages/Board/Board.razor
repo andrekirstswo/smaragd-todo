@@ -1,8 +1,21 @@
 ﻿@page "/boards/{Id}"
 
-<h3>Board with Id: @Id</h3>
+@using Notifications
+
+<MudAlert Severity="Severity.Error" Variant="Variant.Outlined">Work in progress</MudAlert>
+
+<BoardName></BoardName>
+
+<SectionsView />
 
 @code {
     [Parameter]
     public string Id { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var board = await ApiClient.GetBoardByIdAsync(Id);
+        await NotificationBus.Publish(new BoardReceivedNotification(board));
+    }
 }
+

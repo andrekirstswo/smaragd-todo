@@ -1,0 +1,11 @@
+﻿@using Core.Models
+
+@foreach (var item in Items)
+{
+    <Section Item="@item"></Section>
+}
+
+@code {
+    [Parameter]
+    public List<BoardSection> Items { get; set; } = new List<BoardSection>();
+}

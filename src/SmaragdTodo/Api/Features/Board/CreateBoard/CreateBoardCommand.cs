@@ -1,10 +1,9 @@
-﻿using Core;
+﻿using Api.Infrastructure;
 using Core.Models;
-using MediatR;
 
 namespace Api.Features.Board.CreateBoard;
 
-public class CreateBoardRequest : IRequest<Result<CreateBoardResponseDto, Error>>
+public class CreateBoardCommand : Command<CreateBoardResponseDto>
 {
     public string Name { get; set; } = default!;
 }

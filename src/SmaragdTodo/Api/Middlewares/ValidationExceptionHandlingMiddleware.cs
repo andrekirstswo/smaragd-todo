@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Api.Exceptions;
 
-namespace Api.Infrastructure;
+namespace Api.Middlewares;
 
 public class ValidationExceptionHandlingMiddleware
 {

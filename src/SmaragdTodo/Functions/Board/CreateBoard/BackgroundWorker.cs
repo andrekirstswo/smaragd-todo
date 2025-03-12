@@ -8,6 +8,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Notifications;
+using BoardSection = Core.Database.Models.BoardSection;
 
 namespace Functions.Board.CreateBoard;
 
@@ -27,6 +28,7 @@ public class BackgroundWorker
         _logger = logger;
     }
 
+    // TODO Rename
     [Function(nameof(BackgroundWorker))]
     [ServiceBusOutput(QueueNames.Board.CreatedNotification, Connection = ConnectionNames.Messaging)]
     public async Task<BoardCreatedNotification> Run(
@@ -49,7 +51,8 @@ public class BackgroundWorker
         {
             Id = createBoardRequest.BoardId,
             Name = createBoardRequest.Name,
-            CreatedAt = _dateTimeProvider.UtcNow,
+            // TODO
+            //CreatedAt = _dateTimeProvider.UtcNow,
             Owner = userId,
             Accesses = new List<BoardUserAccess>
             {
@@ -58,7 +61,14 @@ public class BackgroundWorker
                     UserId = userId,
                     Role = BoardUserAccessRoles.Admin
                 }
-            }
+            },
+            // TODO
+            //Sections = createBoardRequest.Sections?.Select(s => new BoardSection
+            //{
+            //    Id = s.Id,
+            //    Name = s.Name,
+            //    Order = s.Order
+            //}).ToList() ?? new List<BoardSection>()
         };
 
         var response = await boardsContainer.UpsertItemAsync(board, new PartitionKey(board.Id));
@@ -70,7 +80,12 @@ public class BackgroundWorker
             await messageActions.CompleteMessageAsync(message);
 
             _logger.LogInformation("Message {requestId} successfully completed", requestId);
-            return new BoardCreatedNotification(createBoardRequest.BoardId, createBoardRequest.Name, createBoardRequest.Owner);
+            
+            return new BoardCreatedNotification(
+                createBoardRequest.BoardId,
+                createBoardRequest.Name,
+                createBoardRequest.Owner,
+                createBoardRequest.Sections ?? new List<Core.Models.BoardSection>());
         }
 
         if (message.DeliveryCount >= 10)
