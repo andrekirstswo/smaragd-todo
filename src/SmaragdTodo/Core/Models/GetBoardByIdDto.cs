@@ -1,4 +1,5 @@
-﻿namespace Core.Models;
+﻿// ReSharper disable UnusedAutoPropertyAccessor.Global
+namespace Core.Models;
 
 public class GetBoardByIdDto
 {

@@ -1,3 +1,3 @@
 ﻿namespace Core.Models;
 
-public record BoardSection(string Id, string Name, int Order);
+public record BoardSection(string BoardSectionId, string Name, int Order);

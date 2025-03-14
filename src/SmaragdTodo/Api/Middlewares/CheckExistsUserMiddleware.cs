@@ -26,9 +26,9 @@ public class CheckExistsUserMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var userId = _httpContext?.User.UserId();
+        var userId = _httpContext?.User.GetUserId();
 
-        if (string.IsNullOrEmpty(userId))
+        if (userId is null)
         {
             await _next(context);
             return;

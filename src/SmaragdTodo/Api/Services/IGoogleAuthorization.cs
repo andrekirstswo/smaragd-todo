@@ -1,11 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using Api.Database;
 using Core.Database.Models;
-using Core.Infrastructure;
 using Core.Models;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
-using Microsoft.Azure.CosmosRepository;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
@@ -21,22 +20,19 @@ public interface IGoogleAuthorization
 public class GoogleAuthorization : IGoogleAuthorization
 {
     private readonly IGoogleAuthHelper _googleAuthHelper;
-    private readonly IDateTimeProvider _dateTimeProvider;
-    private readonly IRepository<Credential> _credentialRepository;
-    private readonly IRepository<User> _userRepository;
+    private readonly CredentialRepository _credentialRepository;
+    private readonly UserRepository _userRepository;
     private readonly HybridCache _hybridCache;
     private readonly string? _redirectUri;
 
     public GoogleAuthorization(
         IGoogleAuthHelper googleAuthHelper,
         IConfiguration configuration,
-        IDateTimeProvider dateTimeProvider,
-        IRepository<Credential> credentialRepository,
-        IRepository<User> userRepository,
+        CredentialRepository credentialRepository,
+        UserRepository userRepository,
         HybridCache hybridCache)
     {
         _googleAuthHelper = googleAuthHelper;
-        _dateTimeProvider = dateTimeProvider;
         _credentialRepository = credentialRepository;
         _userRepository = userRepository;
         _hybridCache = hybridCache;
@@ -71,7 +67,7 @@ public class GoogleAuthorization : IGoogleAuthorization
 
         var userId = $"Google@{jwt.Payload["sub"] as string}";
 
-        var existsUser = await _userRepository.ExistsAsync(p => p.AuthenticationProvider == "Google" && p.UserId == userId, cancellationToken: cancellationToken);
+        var existsUser = await _userRepository.ExistsAsync("Google", userId, cancellationToken);
 
         var email = jwt.Payload["email"] as string;
 
@@ -81,7 +77,6 @@ public class GoogleAuthorization : IGoogleAuthorization
         {
             await _userRepository.CreateAsync(new User
             {
-                Id = Guid.CreateVersion7().ToString(),
                 AuthenticationProvider = "Google",
                 UserId = userId,
                 Name = new Name
@@ -90,14 +85,14 @@ public class GoogleAuthorization : IGoogleAuthorization
                     FirstName = jwt.Payload["given_name"] as string
                 },
                 Email = email,
-                CreatedAt = _dateTimeProvider.UtcNow,
                 Picture = jwt.Payload["picture"] as string
             }, cancellationToken);
         }
         else
         {
-            var users = await _userRepository.GetAsync(p => p.AuthenticationProvider == "Google" && p.UserId == userId, cancellationToken: cancellationToken);
-            var user = users.First();
+            var user = await _userRepository.GetByIdAsync("Google", userId, cancellationToken);
+
+            ArgumentNullException.ThrowIfNull(user);
 
             user.Name = new Name
             {
@@ -108,19 +103,18 @@ public class GoogleAuthorization : IGoogleAuthorization
             user.Email = email;
             user.Picture = jwt.Payload["picture"] as string;
 
-            await _userRepository.UpdateAsync(user, cancellationToken: cancellationToken);
+            await _userRepository.UpdateAsync(user, cancellationToken);
         }
 
         var credential = new Credential
         {
-            Id = Guid.NewGuid().ToString(),
+            CredentialId = Guid.CreateVersion7().ToString(),
             AccessToken = token.AccessToken,
             RefreshToken = token.RefreshToken,
             ExpiresInSeconds = token.ExpiresInSeconds,
             IdToken = token.IdToken,
             IssuedUtc = token.IssuedUtc,
-            UserId = userId,
-            CreatedAt = _dateTimeProvider.UtcNow
+            UserId = userId
         };
         await _hybridCache.SetAsync(
             CreateAccessTokenCacheKey(token.AccessToken),
@@ -146,19 +140,7 @@ public class GoogleAuthorization : IGoogleAuthorization
         var cacheKey = CreateAccessTokenCacheKey(accessToken);
         var credential = await _hybridCache.GetOrCreateAsync(
             cacheKey,
-            async cancel =>
-            {
-                var existsCredential = await _credentialRepository.ExistsAsync(p => p.AccessToken == accessToken, cancellationToken: cancel);
-
-                if (!existsCredential)
-                {
-                    return null;
-                }
-
-                var credentials = await _credentialRepository.GetAsync(p => p.AccessToken == accessToken, cancellationToken: cancel);
-
-                return credentials.First();
-            },
+            async cancel => await _credentialRepository.GetByAccessToken(accessToken, cancel),
             DefaultHybridCacheEntryOptions(),
             cancellationToken: cancellationToken);
 

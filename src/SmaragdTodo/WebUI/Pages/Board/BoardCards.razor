@@ -34,13 +34,13 @@ else
     {
         _boardCardViewModels ??= new List<BoardCardViewModel>();
 
-        if (_boardCardViewModels.All(t => t.Id != notification.BoardId))
+        if (_boardCardViewModels.All(t => t.BoardId != notification.BoardId))
         {
             _boardCardViewModels.Add(new BoardCardViewModel
-                {
-                    Id = notification.BoardId,
-                    Name = notification.Name
-                });
+            {
+                BoardId = notification.BoardId,
+                Name = notification.Name
+            });
             
             await InvokeAsync(StateHasChanged);
         }

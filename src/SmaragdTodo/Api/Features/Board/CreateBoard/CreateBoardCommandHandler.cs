@@ -30,30 +30,25 @@ public class CreateBoardCommandHandler : CommandHandler<CreateBoardCommand, Crea
 
     public override async Task<Result<CreateBoardResponseDto, Error>> Handle(CreateBoardCommand request, CancellationToken cancellationToken)
     {
-        var requestId = Guid.CreateVersion7(_dateTimeProvider.UtcNow).ToString();
-        var requestStatusUrl = _linkGenerator.GetUriByAction(_httpContext, "Status", "Board", new { id = requestId });
+        var boardId = Guid.CreateVersion7().ToString();
+        var requestStatusUrl = _linkGenerator.GetUriByAction(_httpContext, "Status", "Board", new { id = boardId });
 
         ArgumentException.ThrowIfNullOrEmpty(requestStatusUrl);
 
-        var owner = _httpContext.User.UserId();
+        var owner = _httpContext.User.GetUserId();
 
         var sections = new List<BoardSection>
         {
-            new(Guid.CreateVersion7(_dateTimeProvider.UtcNow).ToString(), "New", 1),
-            new(Guid.CreateVersion7(_dateTimeProvider.UtcNow).ToString(), "In progress", 2),
-            new(Guid.CreateVersion7(_dateTimeProvider.UtcNow).ToString(), "Done", 3)
+            new(Guid.CreateVersion7().ToString(), "New", 1),
+            new(Guid.CreateVersion7().ToString(), "In progress", 2),
+            new(Guid.CreateVersion7().ToString(), "Done", 3)
         };
 
-        var @event = new BoardCreatedEvent(
-            requestId,
-            request.Name,
-            owner,
-            _dateTimeProvider.UtcNow,
-            sections);
+        var @event = new BoardCreatedEvent(boardId, request.Name, owner, _dateTimeProvider.UtcNow, sections);
 
         var applicationProperties = new Dictionary<string, object>
         {
-            { Constants.Request.RequestId, requestId },
+            { Constants.Request.RequestId, boardId },
             { Constants.Request.RequestStatusUrl, requestStatusUrl }
         };
 

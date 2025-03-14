@@ -1,7 +1,9 @@
 using System.Net;
+using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Core;
 using Core.Database.Models;
+using Core.Infrastructure;
 using Events;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
@@ -31,7 +33,7 @@ public class BoardCreatedBackgroundWorker
         ServiceBusMessageActions messageActions)
     {
         var requestId = message.ApplicationProperties[Constants.Request.RequestId].ToString()!;
-        var createBoardRequest = message.Body.ToObjectFromJson<BoardCreatedEvent>();
+        var createBoardRequest = await JsonSerializer.DeserializeAsync<BoardCreatedEvent>(message.Body.ToStream(), DefaultJsonSerializerOptions.Value);
         
         ArgumentNullException.ThrowIfNull(createBoardRequest);
 
@@ -43,7 +45,7 @@ public class BoardCreatedBackgroundWorker
 
         var board = new Core.Database.Models.Board
         {
-            Id = createBoardRequest.BoardId,
+            BoardId = Guid.CreateVersion7().ToString(),
             Name = createBoardRequest.Name,
             Owner = userId,
             Accesses = new List<BoardUserAccess>
@@ -56,13 +58,13 @@ public class BoardCreatedBackgroundWorker
             },
             Sections = createBoardRequest.Sections?.Select(s => new BoardSection
             {
-                Id = s.Id,
+                BoardSectionId = s.BoardSectionId,
                 Name = s.Name,
                 Order = s.Order
             }).ToList() ?? new List<BoardSection>()
         };
 
-        var response = await boardsContainer.UpsertItemAsync(board, new PartitionKey(board.Id));
+        var response = await boardsContainer.UpsertItemAsync(board, new PartitionKey(board.BoardId));
 
         var success = response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Created;
 

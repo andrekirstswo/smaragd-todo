@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.CosmosRepository;
 using Microsoft.Azure.CosmosRepository.Attributes;
 using Newtonsoft.Json;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Core.Database.Models;
 
@@ -15,7 +16,6 @@ public class User : FullItem
 
     [JsonProperty("authenticationProvider")]
     public string AuthenticationProvider { get; set; } = default!;
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     protected override string GetPartitionKeyValue() => AuthenticationProvider;
 }

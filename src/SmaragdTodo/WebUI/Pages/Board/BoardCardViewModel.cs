@@ -4,13 +4,13 @@ namespace WebUI.Pages.Board;
 
 public class BoardCardViewModel
 {
-    public string Id { get; set; } = default!;
+    public string BoardId { get; set; } = default!;
     public string Name { get; set; } = default!;
 
     public static BoardCardViewModel Map(GetBoardsDto dto) =>
         new BoardCardViewModel
         {
-            Id = dto.Id,
+            BoardId = dto.BoardId,
             Name = dto.Name
         };
 }

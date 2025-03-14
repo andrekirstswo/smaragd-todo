@@ -1,3 +1,4 @@
+using Api.Database;
 using Api.Infrastructure;
 using Api.Middlewares;
 using Api.Services;
@@ -86,13 +87,14 @@ public class Program
             options.ContainerPerItemType = true;
             options.SerializationOptions = new RepositorySerializationOptions
             {
-                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
+                IgnoreNullValues = true
             };
 
             options.ContainerBuilder.Configure<Board>(containerOptions =>
             {
                 containerOptions.WithContainer(ContainerNames.Boards);
-                containerOptions.WithPartitionKey("/id");
+                containerOptions.WithPartitionKey("/boardId");
             });
 
             options.ContainerBuilder.Configure<User>(containerOptions =>
@@ -106,7 +108,16 @@ public class Program
                 containerOptions.WithContainer(ContainerNames.Credentials);
                 containerOptions.WithPartitionKey("/userId");
             });
+
+            options.ContainerBuilder.Configure<TaskItem>(containerOptions =>
+            {
+                containerOptions.WithContainer(ContainerNames.Tasks);
+                containerOptions.WithPartitionKey("/boardId");
+            });
         });
+        builder.Services.AddScoped<BoardRepository>();
+        builder.Services.AddScoped<UserRepository>();
+        builder.Services.AddScoped<CredentialRepository>();
 
         builder.Services.AddAzureClients(factoryBuilder =>
         {

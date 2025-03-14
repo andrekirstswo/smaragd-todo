@@ -1,17 +1,12 @@
-﻿using System.Text.Json.Serialization;
-using Newtonsoft.Json;
+﻿// ReSharper disable PropertyCanBeMadeInitOnly.Global
 
 namespace Core.Database.Models;
 
 public class BoardUserAccess
 {
-    [JsonPropertyName("userId")]
-    [JsonProperty("userId")]
-    public string UserId { get; set; }
+    public string UserId { get; set; } = default!;
 
-    [JsonPropertyName("role")]
-    [JsonProperty("role")]
-    public string Role { get; set; }
+    public string Role { get; set; } = BoardUserAccessRoles.Reader;
 }
 
 public static class BoardUserAccessRoles

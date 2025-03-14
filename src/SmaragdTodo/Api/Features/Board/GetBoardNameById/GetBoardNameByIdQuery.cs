@@ -1,14 +1,13 @@
 ﻿using Api.Infrastructure;
-using Core.Models.ValueObjects;
 
 namespace Api.Features.Board.GetBoardNameById;
 
 public class GetBoardNameByIdQuery : Query<string>
 {
-    public GetBoardNameByIdQuery(BoardId boardId)
+    public GetBoardNameByIdQuery(string boardId)
     {
         BoardId = boardId;
     }
 
-    public BoardId BoardId { get; }
+    public string BoardId { get; }
 }

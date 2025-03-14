@@ -2,4 +2,12 @@
 
 namespace Notifications;
 
-public record BoardReceivedNotification(GetBoardByIdDto Board) : Notification;
+public class BoardReceivedNotification : Notification
+{
+    public BoardReceivedNotification(GetBoardByIdDto board)
+    {
+        Board = board;
+    }
+
+    public GetBoardByIdDto Board { get; init; }
+}

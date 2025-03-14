@@ -1,3 +1,5 @@
 ﻿namespace Notifications;
 
-public record Notification;
+public class Notification
+{
+}

@@ -1,12 +1,12 @@
 ﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Api.Database;
 using Api.Services;
 using Core.Database.Models;
 using Core.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Azure.CosmosRepository;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
@@ -19,8 +19,8 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
         ILoggerFactory logger,
         UrlEncoder encoder,
         IGoogleAuthorization googleAuthorization,
-        IRepository<Credential> credentialRepository,
-        IRepository<User> userRepository)
+        CredentialRepository credentialRepository,
+        UserRepository userRepository)
         : base(options, logger, encoder)
     {
         _googleAuthorization = googleAuthorization;
@@ -29,8 +29,8 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
     }
 
     private readonly IGoogleAuthorization _googleAuthorization;
-    private readonly IRepository<Credential> _credentialRepository;
-    private readonly IRepository<User> _userRepository;
+    private readonly CredentialRepository _credentialRepository;
+    private readonly UserRepository _userRepository;
 
     protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -59,6 +59,12 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
         ArgumentNullException.ThrowIfNull(token);
         
         var userCredential = await _googleAuthorization.ValidateToken(token);
+
+        if (userCredential is not { Token: {} })
+        {
+            return AuthenticateResult.Fail("Invalid access token");
+        }
+
         var user = await GetUserAsync(userCredential.Token.AccessToken);
         if (user == null)
         {
@@ -67,7 +73,7 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id)
+            new(ClaimTypes.NameIdentifier, user.UserId)
         };
 
         var identity = new ClaimsIdentity(claims, Core.Constants.Token.Scheme);
@@ -79,25 +85,10 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
 
     private async Task<User?> GetUserAsync(string accessToken, CancellationToken cancellationToken = default)
     {
-        var result = await _credentialRepository.GetAsync(p => p.AccessToken == accessToken, cancellationToken);
-        var credentials = result.ToList();
-        
-        if (!credentials.Any())
-        {
-            return null;
-        }
+        var credential = await _credentialRepository.GetByAccessToken(accessToken, cancellationToken);
 
-        var userId = credentials.First().UserId;
-
-        var existsUser = await _userRepository.ExistsAsync(p => p.UserId == userId, cancellationToken: cancellationToken);
-
-        if (!existsUser)
-        {
-            return null;
-        }
-
-        var users = await _userRepository.GetAsync(p => p.UserId == userId, cancellationToken: cancellationToken);
-
-        return users.First();
+        return credential is null
+            ? null
+            : await _userRepository.GetByIdAsync("Google", credential.UserId, cancellationToken);
     }
 }

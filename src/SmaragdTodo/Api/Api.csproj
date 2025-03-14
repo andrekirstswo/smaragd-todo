@@ -49,8 +49,4 @@
     <ProjectReference Include="..\SmaragdTodo.ServiceDefaults\SmaragdTodo.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Database\" />
-  </ItemGroup>
-
 </Project>

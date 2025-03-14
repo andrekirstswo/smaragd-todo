@@ -12,7 +12,7 @@ builder.AddServiceDefaults();
 
 builder.AddAzureCosmosClient(ConnectionNames.CosmosDb, configureClientOptions: options =>
 {
-    options.UseSystemTextJsonSerializerWithOptions = JsonSerializerOptions.Web;
+    options.UseSystemTextJsonSerializerWithOptions = new JsonSerializerOptions(JsonSerializerOptions.Web);
 });
 
 builder.AddAzureBlobClient(ConnectionNames.Blobs);

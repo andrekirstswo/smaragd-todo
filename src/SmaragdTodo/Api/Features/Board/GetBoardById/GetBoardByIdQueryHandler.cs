@@ -1,22 +1,22 @@
-﻿using Api.Infrastructure;
+﻿using Api.Database;
+using Api.Infrastructure;
 using Core.Models;
 using Core;
-using Microsoft.Azure.CosmosRepository;
 
 namespace Api.Features.Board.GetBoardById;
 
 public class GetBoardByIdQueryHandler : QueryHandler<GetBoardByIdQuery, GetBoardByIdDto>
 {
-    private readonly IRepository<Core.Database.Models.Board> _boardRepository;
+    private readonly BoardRepository _boardRepository;
 
-    public GetBoardByIdQueryHandler(IRepository<Core.Database.Models.Board> boardRepository)
+    public GetBoardByIdQueryHandler(BoardRepository boardRepository)
     {
         _boardRepository = boardRepository;
     }
 
     public override async Task<Result<GetBoardByIdDto, Error>> Handle(GetBoardByIdQuery request, CancellationToken cancellationToken)
     {
-        var board = await _boardRepository.TryGetAsync(request.BoardId.Value, cancellationToken: cancellationToken);
+        var board = await _boardRepository.GetByIdAsync(request.BoardId, cancellationToken: cancellationToken);
 
         if (board is null)
         {
@@ -28,8 +28,8 @@ public class GetBoardByIdQueryHandler : QueryHandler<GetBoardByIdQuery, GetBoard
             Name = board.Name,
             Owner = board.Owner,
             Accesses = board.Accesses?.Select(a => new BoardUserAccess(a.UserId, a.Role)) ?? new List<BoardUserAccess>(),
-            BoardId = board.Id,
-            Sections = board.Sections?.Select(s => new BoardSection(s.Id, s.Name, s.Order)) ?? new List<BoardSection>()
+            BoardId = board.BoardId,
+            Sections = board.Sections?.Select(s => new BoardSection(s.BoardSectionId, s.Name, s.Order)) ?? new List<BoardSection>()
         };
     }
 }

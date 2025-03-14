@@ -15,7 +15,7 @@ public class GetBoardNameByIdQueryHandler : QueryHandler<GetBoardNameByIdQuery, 
 
     public override async Task<Result<string, Error>> Handle(GetBoardNameByIdQuery request, CancellationToken cancellationToken)
     {
-        var board = await _boardRepository.GetAsync(request.BoardId.Value, cancellationToken: cancellationToken);
+        var board = await _boardRepository.GetAsync(request.BoardId, cancellationToken: cancellationToken);
 
         if (string.IsNullOrEmpty(board.Name))
         {

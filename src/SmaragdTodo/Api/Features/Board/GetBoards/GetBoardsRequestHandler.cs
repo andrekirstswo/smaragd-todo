@@ -22,7 +22,9 @@ public class GetBoardsQueryHandler : QueryHandler<GetBoardsQuery, List<GetBoards
 
     public override async Task<Result<List<GetBoardsDto>, Error>> Handle(GetBoardsQuery request, CancellationToken cancellationToken)
     {
-        var userId = _httpContext.User.UserId();
+        var userId = _httpContext.User.GetUserId();
+
+        // TODO Refactor to query with selected properties
         var result = await _boardRepository.GetAsync(p =>
                 p.Owner == userId ||
                 (p.Accesses != null && p.Accesses.Any(a => a.UserId == userId)),
@@ -31,7 +33,7 @@ public class GetBoardsQueryHandler : QueryHandler<GetBoardsQuery, List<GetBoards
         return result
             .Select(b => new GetBoardsDto
             {
-                Id = b.Id,
+                BoardId = b.BoardId,
                 Name = b.Name
             })
             .ToList();

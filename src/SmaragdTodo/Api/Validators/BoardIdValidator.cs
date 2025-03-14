@@ -1,12 +1,11 @@
 ﻿using Api.Extensions;
 using Core.Database.Models;
-using Core.Models.ValueObjects;
 using FluentValidation;
 using Microsoft.Azure.CosmosRepository;
 
 namespace Api.Validators;
 
-public sealed class BoardIdValidator : AbstractValidator<BoardId>
+public sealed class BoardIdValidator : AbstractValidator<BoardIdValidatorParameters>
 {
     public BoardIdValidator(
         IReadOnlyRepository<Board> boardRepository,
@@ -14,27 +13,26 @@ public sealed class BoardIdValidator : AbstractValidator<BoardId>
     {
         var httpContext = httpContextAccessor.HttpContext;
 
-        RuleFor(r => r.Value)
+        RuleFor(r => r.BoardId)
             .MustAsync(async (id, token) =>
             {
                 return await boardRepository.ExistsAsync(p => p.Id == id, cancellationToken: token);
             })
-            .WithMessage(id => KnownErrors.Board.NotFoundById(id).Message)
+            .WithMessage(validation => KnownErrors.Board.NotFoundById(validation.BoardId).Message)
             .WithErrorCode(ErrorCodes.Board.NotFoundById);
 
-        RuleFor(r => r.Value)
+        RuleFor(r => r.BoardId)
             .MustAsync(async (id, token) =>
             {
                 ArgumentNullException.ThrowIfNull(httpContext);
 
-                // TODO check in Middleware/Pipeline when user not exists
-                var userId = httpContext.User.UserId();
+                var userId = httpContext.User.GetUserId();
 
                 return await boardRepository.ExistsAsync(p =>
                     p.Id == id &&
                     p.Owner == userId || (p.Accesses != null && p.Accesses.Any(a => a.UserId == userId)), cancellationToken: token);
             })
-            .WithMessage(KnownErrors.Board.AccessDenied.Message)
+            .WithMessage(KnownErrors.Board.AccessDenied().Message)
             .WithErrorCode(ErrorCodes.Board.AccessDenied);
     }
 }

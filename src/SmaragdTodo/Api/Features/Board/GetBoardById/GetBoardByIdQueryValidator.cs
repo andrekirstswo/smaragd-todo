@@ -7,7 +7,7 @@ public class GetBoardByIdQueryValidator : AbstractValidator<GetBoardByIdQuery>
 {
     public GetBoardByIdQueryValidator(BoardIdValidator boardIdValidator)
     {
-        RuleFor(r => r.BoardId)
+        RuleFor(r => new BoardIdValidatorParameters(r.BoardId))
             .SetValidator(boardIdValidator);
     }
 }
