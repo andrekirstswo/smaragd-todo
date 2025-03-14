@@ -78,7 +78,7 @@ public class Program
         builder.Services.AddScoped<IGoogleAuthHelper, GoogleAuthHelper>();
         builder.Services.AddScoped<IGoogleAuthorization, GoogleAuthorization>();
         
-        builder.Services.AddHostedService<NotificationBackgroundWorker>();
+        builder.Services.AddHostedService<BoardCreatedNotificationBackgroundWorker>();
 
         builder.Services.AddCosmosRepository(options =>
         {

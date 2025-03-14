@@ -29,7 +29,12 @@ public class GetBoardByIdQueryHandler : QueryHandler<GetBoardByIdQuery, GetBoard
             Owner = board.Owner,
             Accesses = board.Accesses?.Select(a => new BoardUserAccess(a.UserId, a.Role)) ?? new List<BoardUserAccess>(),
             BoardId = board.BoardId,
-            Sections = board.Sections?.Select(s => new BoardSection(s.BoardSectionId, s.Name, s.Order)) ?? new List<BoardSection>()
+            Sections = board.Sections?.Select(s => new BoardSection
+            {
+                BoardSectionId = s.BoardSectionId,
+                Name = s.Name,
+                Order = s.Order
+            }) ?? new List<BoardSection>()
         };
     }
 }

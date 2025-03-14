@@ -7,7 +7,7 @@
 }
 else
 {
-    @foreach (var item in _items)
+    @foreach (var item in _items.OrderBy(_ => _.Order))
     {
         <Section Item="@item"></Section>
     }

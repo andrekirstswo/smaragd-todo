@@ -7,12 +7,12 @@ using Notifications;
 
 namespace Api;
 
-public class NotificationBackgroundWorker : BackgroundService
+public class BoardCreatedNotificationBackgroundWorker : BackgroundService
 {
     private readonly IHubContext<NotificationHub, INotificationHubClient> _hubContext;
     private readonly ServiceBusClient _serviceBusClient;
 
-    public NotificationBackgroundWorker(
+    public BoardCreatedNotificationBackgroundWorker(
         IHubContext<NotificationHub, INotificationHubClient> hubContext,
         ServiceBusClient serviceBusClient)
     {

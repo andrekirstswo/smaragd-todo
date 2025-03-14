@@ -1,4 +1,6 @@
-﻿using Core.Models;
+﻿using System.Net;
+using Api.Features.Task.CreateTask;
+using Core.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,13 +17,26 @@ public class TaskController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet("/api/board/{boardId}/status/{taskId}")]
+    public Task<IActionResult> Status(string boardId, string taskId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    [HttpGet("/api/board/{boardId}/task/{taskId}")]
     public Task<IActionResult> Get(string boardId, string taskId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public Task<IActionResult> Create(string boardId, CreateTaskDto model, CancellationToken cancellationToken = default)
+    [HttpPost("/api/board/{boardId}/task")]
+    [ProducesResponseType(typeof(CreateTaskResponseDto), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> Create(string boardId, [FromBody] CreateTaskDto model, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var result = await _mediator.Send(new CreateTaskCommand(boardId, model), cancellationToken);
+
+        return result.IsSuccess
+            ? Accepted(result.Value!.StatusUrl, new { requestStatusUrl = result.Value!.StatusUrl })
+            : BadRequest(result.Error);
     }
 }

@@ -39,26 +39,8 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
 
                 var userId = httpContextAccessor.HttpContext.User.GetUserId();
 
-                var isOwner = await boardRepository.IsUserOwnerOfBoardByIdAsync(command.BoardId, userId, token);
-
-                if (isOwner)
-                {
-                    return true;
-                }
-
-                // TODO Eventuell eine extra Methode für das Holen der Accesses
-                var board = await boardRepository.GetByIdAsync(command.BoardId, token);
-
-                ArgumentNullException.ThrowIfNull(board);
-
-                if (board.Accesses is null || board.Accesses.Count == 0)
-                {
-                    return false;
-                }
-
-                var access = board.Accesses.FirstOrDefault(p => p.UserId == userId);
-
-                return access?.Role is BoardUserAccessRoles.Admin or BoardUserAccessRoles.Writer;
+                return await boardRepository.IsUserOwnerOfBoardByIdAsync(command.BoardId, userId, token) ||
+                       await boardRepository.IsUserInRolesAsync(command.BoardId, userId, new[] { BoardUserAccessRoles.Admin, BoardUserAccessRoles.Writer });
             })
             .WithMessage(KnownErrors.Board.AccessDenied().Message)
             .WithErrorCode(ErrorCodes.Board.AccessDenied);

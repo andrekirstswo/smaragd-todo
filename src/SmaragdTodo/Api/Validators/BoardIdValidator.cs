@@ -14,22 +14,22 @@ public sealed class BoardIdValidator : AbstractValidator<BoardIdValidatorParamet
         var httpContext = httpContextAccessor.HttpContext;
 
         RuleFor(r => r.BoardId)
-            .MustAsync(async (id, token) =>
+            .MustAsync(async (boardId, token) =>
             {
-                return await boardRepository.ExistsAsync(p => p.Id == id, cancellationToken: token);
+                return await boardRepository.ExistsAsync(p => p.BoardId == boardId, cancellationToken: token);
             })
             .WithMessage(validation => KnownErrors.Board.NotFoundById(validation.BoardId).Message)
             .WithErrorCode(ErrorCodes.Board.NotFoundById);
 
         RuleFor(r => r.BoardId)
-            .MustAsync(async (id, token) =>
+            .MustAsync(async (boardId, token) =>
             {
                 ArgumentNullException.ThrowIfNull(httpContext);
 
                 var userId = httpContext.User.GetUserId();
 
                 return await boardRepository.ExistsAsync(p =>
-                    p.Id == id &&
+                    p.BoardId == boardId &&
                     p.Owner == userId || (p.Accesses != null && p.Accesses.Any(a => a.UserId == userId)), cancellationToken: token);
             })
             .WithMessage(KnownErrors.Board.AccessDenied().Message)

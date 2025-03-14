@@ -8,5 +8,5 @@ public class CreateTaskDto
 
 public class CreateTaskResponseDto : IHasResponseWithStatusUrl
 {
-    public string StatusUrl { get; } = default!;
+    public string StatusUrl { get; init; } = default!;
 }

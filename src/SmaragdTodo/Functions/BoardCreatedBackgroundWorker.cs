@@ -10,7 +10,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Notifications;
 
-namespace Functions.Board;
+namespace Functions;
 
 public class BoardCreatedBackgroundWorker
 {
@@ -43,7 +43,7 @@ public class BoardCreatedBackgroundWorker
         var userId = createBoardRequest.Owner;
         ArgumentException.ThrowIfNullOrEmpty(userId);
 
-        var board = new Core.Database.Models.Board
+        var board = new Board
         {
             BoardId = Guid.CreateVersion7().ToString(),
             Name = createBoardRequest.Name,

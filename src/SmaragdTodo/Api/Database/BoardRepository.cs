@@ -14,12 +14,18 @@ public class BoardRepository
 
     public async Task<Board?> GetByIdAsync(string boardId, CancellationToken cancellationToken = default)
     {
-        if (!await _repository.ExistsAsync(boardId, cancellationToken: cancellationToken))
-        {
-            return null;
-        }
+        var result = await _repository.GetAsync(p => p.BoardId == boardId, cancellationToken: cancellationToken);
+        return result.SingleOrDefault();
+    }
 
-        return await _repository.GetAsync(boardId, cancellationToken: cancellationToken);
+    public async Task<bool> IsUserInRolesAsync(string boardId, string userId, IEnumerable<string> roles, CancellationToken cancellationToken = default)
+    {
+        return await _repository.ExistsAsync(b =>
+            b.BoardId == boardId &&
+            b.Accesses != null &&
+            b.Accesses.Any(a =>
+                a.UserId == userId &&
+                roles.Contains(a.Role)), cancellationToken);
     }
 
     public async Task<bool> IsUserOwnerOfBoardByIdAsync(string boardId, string userId, CancellationToken cancellationToken = default)

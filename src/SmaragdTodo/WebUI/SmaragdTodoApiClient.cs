@@ -44,9 +44,22 @@ public class SmaragdTodoApiClient
     {
         var response = await _httpClient.PostAsJsonAsync("api/Board", dto, cancellationToken);
 
+        return await HandleCreateAsync<CreateBoardResponseDto>(response, cancellationToken);
+    }
+
+    public async Task<CreateTaskResponseDto> CreateTaskAsync(string boardId, CreateTaskDto dto, CancellationToken cancellationToken)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"/api/board/{boardId}/task", dto, cancellationToken);
+
+        return await HandleCreateAsync<CreateTaskResponseDto>(response, cancellationToken);
+    }
+
+    private static async Task<TResult> HandleCreateAsync<TResult>(HttpResponseMessage response, CancellationToken cancellationToken = default)
+        where TResult : new()
+    {
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<CreateBoardResponseDto>(cancellationToken) ?? new CreateBoardResponseDto();
+            return await response.Content.ReadFromJsonAsync<TResult>(cancellationToken) ?? new TResult();
         }
 
         throw new NotImplementedException();

@@ -1,0 +1,28 @@
+﻿@using Core.Models
+@if (_isNewTaskOpen)
+{
+    <MudPaper Elevation="25"
+              Class="pa-2 rounded-lg">
+
+        <MudTextField @bind-Value="Item.Name" Placeholder="New Task" Underline="false" Margin="Margin.Dense" Class="mx-2 mt-n2" />
+        <MudButton OnClick="@(() => AddTaskItem(Item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">
+            Add Todo item
+        </MudButton>
+    </MudPaper>
+}
+else
+{
+    <MudButton OnClick="@(() => _isNewTaskOpen = !_isNewTaskOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
+}
+
+@code
+{
+    [Parameter]
+    public BoardSection Item { get; set; }
+
+    private bool _isNewTaskOpen;
+
+    private void AddTaskItem(BoardSection boardSection)
+    {
+    }
+}

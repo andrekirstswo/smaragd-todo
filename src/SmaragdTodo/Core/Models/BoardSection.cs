@@ -1,3 +1,8 @@
 ﻿namespace Core.Models;
 
-public record BoardSection(string BoardSectionId, string Name, int Order);
+public class BoardSection
+{
+    public string BoardSectionId { get; set; }
+    public string Name { get; set; }
+    public int Order { get; set; }
+}

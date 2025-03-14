@@ -39,9 +39,24 @@ public class CreateBoardCommandHandler : CommandHandler<CreateBoardCommand, Crea
 
         var sections = new List<BoardSection>
         {
-            new(Guid.CreateVersion7().ToString(), "New", 1),
-            new(Guid.CreateVersion7().ToString(), "In progress", 2),
-            new(Guid.CreateVersion7().ToString(), "Done", 3)
+            new BoardSection
+            {
+                BoardSectionId = Guid.CreateVersion7().ToString(),
+                Name = "New",
+                Order = 1
+            },
+            new BoardSection
+            {
+                BoardSectionId = Guid.CreateVersion7().ToString(),
+                Name = "In progress",
+                Order = 2
+            },
+            new BoardSection
+            {
+                BoardSectionId = Guid.CreateVersion7().ToString(),
+                Name = "Done",
+                Order = 3
+            }
         };
 
         var @event = new BoardCreatedEvent(boardId, request.Name, owner, _dateTimeProvider.UtcNow, sections);
