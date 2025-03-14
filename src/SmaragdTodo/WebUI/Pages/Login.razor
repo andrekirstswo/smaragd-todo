@@ -1,10 +1,11 @@
 ﻿@page "/login"
+@using Core
 
 <MudButton
     Color="Color.Primary"
     Variant="Variant.Filled"
     StartIcon="@Icons.Custom.Brands.Google"
-    @onclick="LoginAsync">Login with Google
+           @onclick="LoginAsync">Login with @AuthenticationProviders.Google
 </MudButton>
 
 @code

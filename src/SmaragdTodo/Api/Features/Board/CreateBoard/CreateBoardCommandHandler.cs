@@ -1,8 +1,8 @@
 ﻿using Api.Extensions;
 using Api.Infrastructure;
 using Core;
-using Core.Infrastructure;
 using Core.Models;
+using ErrorHandling;
 using Events;
 using BoardSection = Core.Models.BoardSection;
 
@@ -12,18 +12,15 @@ public class CreateBoardCommandHandler : CommandHandler<CreateBoardCommand, Crea
 {
     private readonly IMessaging _messaging;
     private readonly LinkGenerator _linkGenerator;
-    private readonly IDateTimeProvider _dateTimeProvider;
     private readonly HttpContext _httpContext;
 
     public CreateBoardCommandHandler(
         IHttpContextAccessor httpContextAccessor,
         IMessaging messaging,
-        LinkGenerator linkGenerator,
-        IDateTimeProvider dateTimeProvider)
+        LinkGenerator linkGenerator)
     {
         _messaging = messaging;
         _linkGenerator = linkGenerator;
-        _dateTimeProvider = dateTimeProvider;
         ArgumentNullException.ThrowIfNull(httpContextAccessor.HttpContext);
         _httpContext = httpContextAccessor.HttpContext;
     }
@@ -59,7 +56,7 @@ public class CreateBoardCommandHandler : CommandHandler<CreateBoardCommand, Crea
             }
         };
 
-        var @event = new BoardCreatedEvent(boardId, request.Name, owner, _dateTimeProvider.UtcNow, sections);
+        var @event = new BoardCreatedEvent(boardId, request.Name, owner, sections);
 
         var applicationProperties = new Dictionary<string, object>
         {
@@ -67,7 +64,7 @@ public class CreateBoardCommandHandler : CommandHandler<CreateBoardCommand, Crea
             { Constants.Request.RequestStatusUrl, requestStatusUrl }
         };
 
-        await _messaging.PrepareAndSendMessageAsync(@event, applicationProperties, cancellationToken);
+        await _messaging.SendEventAsync(@event, applicationProperties, cancellationToken);
 
         return new CreateBoardResponseDto
         {

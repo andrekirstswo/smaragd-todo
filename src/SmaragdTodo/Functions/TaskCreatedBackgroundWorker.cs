@@ -1,9 +1,8 @@
 using System.Net;
-using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Core;
 using Core.Database.Models;
-using Core.Infrastructure;
+using Core.Extensions;
 using Events;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
@@ -33,7 +32,7 @@ public class TaskCreatedBackgroundWorker
         ServiceBusMessageActions messageActions)
     {
         var requestId = message.ApplicationProperties[Constants.Request.RequestId].ToString()!;
-        var @event = await JsonSerializer.DeserializeAsync<TaskCreatedEvent>(message.Body.ToStream(), DefaultJsonSerializerOptions.Value);
+        var @event = await message.Body.ToObjectFromJsonAsync<TaskCreatedEvent>();
         
         ArgumentNullException.ThrowIfNull(@event);
 

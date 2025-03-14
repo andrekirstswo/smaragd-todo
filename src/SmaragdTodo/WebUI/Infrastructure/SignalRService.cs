@@ -21,8 +21,9 @@ public class SignalRService : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        var token = await _tokenProvider.GetTokenAsStringAsync(cancellationToken);
+        var token = await _tokenProvider.GetTokenAsStringAsync();
 
+        // TODO Config
         _hubConnection = new HubConnectionBuilder()
             .WithUrl($"https://localhost:7259/{SignalRHubNames.Notifications}", options =>
             {
@@ -32,6 +33,7 @@ public class SignalRService : IAsyncDisposable
             .Build();
 
         AddHandleNotification<BoardCreatedNotification>(nameof(INotificationHubClient.ReceiveBoardCreatedNotification));
+        AddHandleNotification<TaskCreatedNotification>(nameof(INotificationHubClient.ReceiveTaskCreatedNotification));
 
         await _hubConnection.StartAsync(cancellationToken);
     }

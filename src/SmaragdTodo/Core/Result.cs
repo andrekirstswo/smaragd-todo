@@ -15,6 +15,7 @@ public class Result<TValue, TError>
         Value = default;
         Error = error;
     }
+
     public TValue? Value { get; }
     public TError? Error { get; }
     public bool IsSuccess { get; }

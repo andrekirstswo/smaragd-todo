@@ -1,12 +1,13 @@
 ﻿using Core;
 
-namespace Api;
+namespace ErrorHandling;
 
 public static class KnownErrors
 {
     public static class Authentication
     {
-        public static readonly Error EmailNotVerified = new Error("EMAIL_NOT_VERIFIED", "Email not verified");
+        public static readonly Error EmailNotVerified = new Error(ErrorCodes.Authentication.EmailNotVerified, "Email not verified");
+        public static readonly Error TokenProviderKeyNotFound = new Error(ErrorCodes.Authentication.TokenProviderKeyNotFound, $"Key {Constants.Token.Key} not found");
     }
 
     public static class Board
@@ -25,6 +26,12 @@ public static class KnownErrors
 
 public static class ErrorCodes
 {
+    public static class Authentication
+    {
+        public const string EmailNotVerified = "EMAIL_NOT_VERIFIED";
+        public const string TokenProviderKeyNotFound = "TOKEN_PROVIDER_KEY_NOT_FOUND";
+    }
+
     public static class Board
     {
         public const string NotFoundById = "BOARD_NOT_FOUND_BY_ID";

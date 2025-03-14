@@ -14,7 +14,7 @@ public class AuthHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var result = await _tokenProvider.GetTokenAsStringAsync(cancellationToken);
+        var result = await _tokenProvider.GetTokenAsStringAsync();
 
         if (!result.IsSuccess)
         {

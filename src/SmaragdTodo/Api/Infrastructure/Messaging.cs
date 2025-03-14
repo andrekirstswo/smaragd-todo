@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
-using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using Core.Extensions;
 using Core.Infrastructure;
 using Events;
 
@@ -17,10 +17,10 @@ public class Messaging : IMessaging
         _dateTimeProvider = dateTimeProvider;
     }
 
-    public async Task PrepareAndSendMessageAsync<TEvent>(TEvent @event, Dictionary<string, object> additionalApplicationProperties, CancellationToken cancellationToken = default)
+    public async Task SendEventAsync<TEvent>(TEvent @event, Dictionary<string, object> additionalApplicationProperties, CancellationToken cancellationToken = default)
         where TEvent : Event
     {
-        var payload = JsonSerializer.Serialize(@event, DefaultJsonSerializerOptions.Value);
+        var payload = @event.ToJson();
         var message = new ServiceBusMessage(payload);
 
         message.ApplicationProperties.Add(Constants.Request.RequestSubmittedAt, _dateTimeProvider.UtcNow);

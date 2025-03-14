@@ -1,3 +1,4 @@
+using Api.BackgroundWorkers;
 using Api.Database;
 using Api.Infrastructure;
 using Api.Middlewares;
@@ -35,7 +36,7 @@ public class Program
         builder.Services.AddSingleton<IMessaging, Messaging>();
         builder.Services
             .AddOptions<GoogleAuthenticationOptions>()
-            .BindConfiguration("Authentication:Google");
+            .BindConfiguration($"Authentication:{AuthenticationProviders.Google}");
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddMediatR(options =>
@@ -60,7 +61,7 @@ public class Program
             .AddScheme<AuthenticationSchemeOptions, GoogleAccessTokenAuthenticationHandler>(Core.Constants.Token.Scheme, null)
             .AddGoogle(options =>
             {
-                var section = builder.Configuration.GetSection("Authentication:Google");
+                var section = builder.Configuration.GetSection($"Authentication:{AuthenticationProviders.Google}");
 
                 var clientId = section["ClientId"];
                 var clientSecret = section["ClientSecret"];

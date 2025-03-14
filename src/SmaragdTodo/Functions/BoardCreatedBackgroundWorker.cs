@@ -3,7 +3,6 @@ using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Core;
 using Core.Database.Models;
-using Core.Infrastructure;
 using Events;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
@@ -33,7 +32,7 @@ public class BoardCreatedBackgroundWorker
         ServiceBusMessageActions messageActions)
     {
         var requestId = message.ApplicationProperties[Constants.Request.RequestId].ToString()!;
-        var createBoardRequest = await JsonSerializer.DeserializeAsync<BoardCreatedEvent>(message.Body.ToStream(), DefaultJsonSerializerOptions.Value);
+        var createBoardRequest = await JsonSerializer.DeserializeAsync<BoardCreatedEvent>(message.Body.ToStream());
         
         ArgumentNullException.ThrowIfNull(createBoardRequest);
 

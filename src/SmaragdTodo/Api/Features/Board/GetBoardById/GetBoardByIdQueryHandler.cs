@@ -2,6 +2,7 @@
 using Api.Infrastructure;
 using Core.Models;
 using Core;
+using ErrorHandling;
 
 namespace Api.Features.Board.GetBoardById;
 

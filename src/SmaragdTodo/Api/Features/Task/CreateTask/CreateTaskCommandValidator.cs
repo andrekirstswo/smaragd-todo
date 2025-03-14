@@ -2,6 +2,7 @@
 using Api.Extensions;
 using Api.Validators;
 using Core.Database.Models;
+using ErrorHandling;
 using FluentValidation;
 
 namespace Api.Features.Task.CreateTask;

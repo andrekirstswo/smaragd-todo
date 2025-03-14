@@ -1,6 +1,7 @@
 ﻿using Api.Infrastructure;
 using Core;
 using Core.Models;
+using ErrorHandling;
 using Events;
 
 namespace Api.Features.Task.CreateTask;
@@ -38,7 +39,7 @@ public class CreateTaskCommandHandler : CommandHandler<CreateTaskCommand, Create
             { Constants.Request.RequestStatusUrl, requestStatusUrl }
         };
 
-        await _messaging.PrepareAndSendMessageAsync(@event, applicationProperties, cancellationToken);
+        await _messaging.SendEventAsync(@event, applicationProperties, cancellationToken);
 
         return new CreateTaskResponseDto
         {

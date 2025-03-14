@@ -50,8 +50,6 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             throw new Exceptions.ValidationException(errors);
         }
 
-        var response = await next();
-
-        return response;
+        return await next();
     }
 }

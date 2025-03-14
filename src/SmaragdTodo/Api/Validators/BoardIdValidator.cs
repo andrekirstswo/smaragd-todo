@@ -1,5 +1,6 @@
 ﻿using Api.Extensions;
 using Core.Database.Models;
+using ErrorHandling;
 using FluentValidation;
 using Microsoft.Azure.CosmosRepository;
 

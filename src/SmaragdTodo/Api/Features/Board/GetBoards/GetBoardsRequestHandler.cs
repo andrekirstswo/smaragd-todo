@@ -2,6 +2,7 @@
 using Api.Infrastructure;
 using Core;
 using Core.Models;
+using ErrorHandling;
 using Microsoft.Azure.CosmosRepository;
 
 namespace Api.Features.Board.GetBoards;

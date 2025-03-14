@@ -3,7 +3,7 @@
 namespace Notifications;
 
 [Notification(QueueNames.Task.CreatedNotification)]
-public class TaskCreatedNotification
+public class TaskCreatedNotification : Notification
 {
     public string TaskId { get; set; } = default!;
     public string BoardId { get; set; } = default!;

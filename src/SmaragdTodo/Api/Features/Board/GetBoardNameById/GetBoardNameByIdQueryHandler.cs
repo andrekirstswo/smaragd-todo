@@ -1,5 +1,6 @@
 ﻿using Api.Infrastructure;
 using Core;
+using ErrorHandling;
 using Microsoft.Azure.CosmosRepository;
 
 namespace Api.Features.Board.GetBoardNameById;

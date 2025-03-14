@@ -3,7 +3,7 @@ using Notifications;
 
 namespace Api;
 
-public class NotificationHub : Hub<INotificationHubClient>
+public class NotificationHub : Hub<INotificationHubClient>, INotificationHubClient
 {
     private readonly IHubContext<NotificationHub, INotificationHubClient> _hubContext;
 
@@ -17,6 +17,13 @@ public class NotificationHub : Hub<INotificationHubClient>
         await Clients
             .Client(Context.ConnectionId)
             .ReceiveBoardCreatedNotification(notification);
+    }
+
+    public async Task ReceiveTaskCreatedNotification(TaskCreatedNotification notification)
+    {
+        await Clients
+            .Client(Context.ConnectionId)
+            .ReceiveTaskCreatedNotification(notification);
     }
 
     public override async Task OnConnectedAsync()

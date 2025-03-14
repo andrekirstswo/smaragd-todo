@@ -1,4 +1,5 @@
 ﻿using Core;
+using ErrorHandling;
 using MediatR;
 
 namespace Api.Infrastructure;

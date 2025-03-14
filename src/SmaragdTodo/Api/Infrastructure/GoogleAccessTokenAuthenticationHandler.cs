@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Api.Database;
 using Api.Services;
+using Core;
 using Core.Database.Models;
 using Core.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -89,6 +90,6 @@ public class GoogleAccessTokenAuthenticationHandler : AuthenticationHandler<Auth
 
         return credential is null
             ? null
-            : await _userRepository.GetByIdAsync("Google", credential.UserId, cancellationToken);
+            : await _userRepository.GetByIdAsync(AuthenticationProviders.Google, credential.UserId, cancellationToken);
     }
 }

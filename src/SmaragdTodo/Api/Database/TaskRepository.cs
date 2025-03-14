@@ -14,5 +14,6 @@ public class TaskRepository
 
     public async Task CreateAsync(CancellationToken cancellationToken = default)
     {
+        throw new NotImplementedException();
     }
 }

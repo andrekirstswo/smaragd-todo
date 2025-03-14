@@ -1,4 +1,5 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using Core;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Oauth2.v2;
 
 namespace Api.Services;
@@ -7,7 +8,6 @@ public interface IGoogleAuthHelper
 {
     string[] GetScopes();
     string ScopeToString();
-
     ClientSecrets GetClientSecrets();
 }
 
@@ -32,7 +32,7 @@ public class GoogleAuthHelper : IGoogleAuthHelper
 
     public ClientSecrets GetClientSecrets()
     {
-        var section = _configuration.GetSection("Authentication:Google");
+        var section = _configuration.GetSection($"Authentication:{AuthenticationProviders.Google}");
         
         var clientId = section["ClientId"];
         var clientSecret = section["ClientSecret"];

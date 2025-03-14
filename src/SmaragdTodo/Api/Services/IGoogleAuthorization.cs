@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using Api.Database;
+using Core;
 using Core.Database.Models;
 using Core.Models;
 using Google.Apis.Auth.OAuth2;
@@ -36,7 +37,7 @@ public class GoogleAuthorization : IGoogleAuthorization
         _credentialRepository = credentialRepository;
         _userRepository = userRepository;
         _hybridCache = hybridCache;
-        _redirectUri = configuration["Authentication:Google:RedirectUri"];
+        _redirectUri = configuration[$"Authentication:{AuthenticationProviders.Google}:RedirectUri"];
     }
 
     public string GetAuthorizationUrl() =>
@@ -65,9 +66,9 @@ public class GoogleAuthorization : IGoogleAuthorization
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(token.IdToken);
 
-        var userId = $"Google@{jwt.Payload["sub"] as string}";
+        var userId = $"{AuthenticationProviders.Google}@{jwt.Payload["sub"] as string}";
 
-        var existsUser = await _userRepository.ExistsAsync("Google", userId, cancellationToken);
+        var existsUser = await _userRepository.ExistsAsync(AuthenticationProviders.Google, userId, cancellationToken);
 
         var email = jwt.Payload["email"] as string;
 
@@ -77,7 +78,7 @@ public class GoogleAuthorization : IGoogleAuthorization
         {
             await _userRepository.CreateAsync(new User
             {
-                AuthenticationProvider = "Google",
+                AuthenticationProvider = AuthenticationProviders.Google,
                 UserId = userId,
                 Name = new Name
                 {
@@ -90,7 +91,7 @@ public class GoogleAuthorization : IGoogleAuthorization
         }
         else
         {
-            var user = await _userRepository.GetByIdAsync("Google", userId, cancellationToken);
+            var user = await _userRepository.GetByIdAsync(AuthenticationProviders.Google, userId, cancellationToken);
 
             ArgumentNullException.ThrowIfNull(user);
 

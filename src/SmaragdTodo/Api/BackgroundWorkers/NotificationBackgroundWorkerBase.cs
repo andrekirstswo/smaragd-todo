@@ -1,28 +1,33 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using Core;
-using Core.Infrastructure;
 using Microsoft.AspNetCore.SignalR;
 using Notifications;
 
-namespace Api;
+namespace Api.BackgroundWorkers;
 
-public class BoardCreatedNotificationBackgroundWorker : BackgroundService
+public abstract class NotificationBackgroundWorkerBase<TNotification> : BackgroundService
+    where TNotification : Notification
 {
     private readonly IHubContext<NotificationHub, INotificationHubClient> _hubContext;
     private readonly ServiceBusClient _serviceBusClient;
+    private readonly string _queueName;
+    private readonly Func<IHubContext<NotificationHub, INotificationHubClient>, TNotification, Task> _signalr;
 
-    public BoardCreatedNotificationBackgroundWorker(
+    protected NotificationBackgroundWorkerBase(
         IHubContext<NotificationHub, INotificationHubClient> hubContext,
-        ServiceBusClient serviceBusClient)
+        ServiceBusClient serviceBusClient,
+        string queueName,
+        Func<IHubContext<NotificationHub, INotificationHubClient>, TNotification, Task> signalr)
     {
         _hubContext = hubContext;
         _serviceBusClient = serviceBusClient;
+        _queueName = queueName;
+        _signalr = signalr;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var receiver = _serviceBusClient.CreateReceiver(QueueNames.Board.CreatedNotification);
+        var receiver = _serviceBusClient.CreateReceiver(_queueName);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -34,17 +39,14 @@ public class BoardCreatedNotificationBackgroundWorker : BackgroundService
                 continue;
             }
 
-            var notification = await JsonSerializer.DeserializeAsync<BoardCreatedNotification>(
-                message.Body.ToStream(),
-                DefaultJsonSerializerOptions.Value,
-                stoppingToken);
-            
+            var notification = await JsonSerializer.DeserializeAsync<TNotification>(message.Body.ToStream(), cancellationToken: stoppingToken);
+
             if (notification is null)
             {
                 continue;
             }
 
-            await _hubContext.Clients.User(notification.Owner).ReceiveBoardCreatedNotification(notification);
+            await _signalr(_hubContext, notification);
 
             await receiver.CompleteMessageAsync(message, stoppingToken);
         }
