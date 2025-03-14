@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using Azure.Messaging.ServiceBus;
+﻿using Azure.Messaging.ServiceBus;
+using Core.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using Notifications;
 
@@ -39,7 +39,7 @@ public abstract class NotificationBackgroundWorkerBase<TNotification> : Backgrou
                 continue;
             }
 
-            var notification = await JsonSerializer.DeserializeAsync<TNotification>(message.Body.ToStream(), cancellationToken: stoppingToken);
+            var notification = await message.Body.ToObjectFromJsonAsync<TNotification>(stoppingToken);
 
             if (notification is null)
             {
