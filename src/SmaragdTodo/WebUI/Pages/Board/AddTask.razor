@@ -5,7 +5,7 @@
     <MudPaper Elevation="25"
     Class="pa-2 rounded-lg">
 
-        <MudTextField @bind-Value="Title" Label="@Item.Name" Placeholder="New Task" Underline="false" Margin="Margin.Dense" Class="mx-2 mt-n2" />
+        <MudTextField @bind-Value="Title" AutoFocus="_isNewTaskOpen" Label="@Item.Name" Placeholder="New Task" Underline="false" Margin="Margin.Dense" Class="mx-2 mt-n2" />
         <MudButton OnClick="@(() => AddTaskItemAsync(Item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">
             Add Todo item
         </MudButton>
