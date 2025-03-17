@@ -1,28 +1,60 @@
 ﻿@using Core.Models
+@using Core.Extensions
 @if (_isNewTaskOpen)
 {
     <MudPaper Elevation="25"
-              Class="pa-2 rounded-lg">
+    Class="pa-2 rounded-lg">
 
-        <MudTextField @bind-Value="Item.Name" Placeholder="New Task" Underline="false" Margin="Margin.Dense" Class="mx-2 mt-n2" />
-        <MudButton OnClick="@(() => AddTaskItem(Item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">
+        <MudTextField @bind-Value="Title" Label="@Item.Name" Placeholder="New Task" Underline="false" Margin="Margin.Dense" Class="mx-2 mt-n2" />
+        <MudButton OnClick="@(() => AddTaskItemAsync(Item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">
             Add Todo item
         </MudButton>
     </MudPaper>
 }
 else
 {
-    <MudButton OnClick="@(() => _isNewTaskOpen = !_isNewTaskOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
+    <MudButton OnClick="ShowCreateTask" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
 }
 
 @code
 {
     [Parameter]
-    public BoardSection Item { get; set; }
+    public BoardSection Item { get; set; } = default!;
+
+    [Parameter]
+    public string BoardId { get; set; } = default!;
 
     private bool _isNewTaskOpen;
 
-    private void AddTaskItem(BoardSection boardSection)
+    private string Title { get; set; }
+
+    private async Task AddTaskItemAsync(BoardSection boardSection)
     {
+        var authenticationState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User.GetUserId();
+
+        var dto = new CreateTaskDto
+        {
+            Title = Title,
+            AssignedTo = new List<string>
+            {
+                user
+            }
+        };
+        var response = await ApiClient.CreateTaskAsync(BoardId, dto);
+        if (response.IsSuccess)
+        {
+            // TODO
+        }
+        else
+        {
+            // TODO
+        }
+    }
+
+    private void ShowCreateTask()
+    {
+        _isNewTaskOpen = !_isNewTaskOpen;
+
     }
 }

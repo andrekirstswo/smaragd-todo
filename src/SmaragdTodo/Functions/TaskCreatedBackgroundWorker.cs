@@ -48,9 +48,7 @@ public class TaskCreatedBackgroundWorker
 
         var response = await tasksContainer.UpsertItemAsync(taskItem, new PartitionKey(taskItem.BoardId));
 
-        var success = response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Created;
-
-        if (success)
+        if (response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Created)
         {
             await messageActions.CompleteMessageAsync(message);
 

@@ -19,7 +19,12 @@ public class TaskCreatedNotificationBackgroundWorker : NotificationBackgroundWor
 
     protected override async Task Notify(TaskCreatedNotification notification, CancellationToken cancellationToken = default)
     {
-        foreach (var assignee in notification.AssignedTo)
+        if (!notification.AssignedTo.Any())
+        {
+            return;
+        }
+
+        foreach (var assignee in notification.AssignedTo.Where(a => !string.IsNullOrEmpty(a)))
         {
             await HubContext.Clients.User(assignee).ReceiveTaskCreatedNotification(notification);
         }

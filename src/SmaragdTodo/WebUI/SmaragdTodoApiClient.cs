@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using Core;
 using Core.Models;
+using ErrorHandling;
 
 namespace WebUI;
 
@@ -47,9 +49,9 @@ public class SmaragdTodoApiClient
         return await HandleCreateAsync<CreateBoardResponseDto>(response, cancellationToken);
     }
 
-    public async Task<CreateTaskResponseDto> CreateTaskAsync(string boardId, CreateTaskDto dto, CancellationToken cancellationToken)
+    public async Task<Result<CreateTaskResponseDto, Error>> CreateTaskAsync(string boardId, CreateTaskDto dto, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync($"/api/board/{boardId}/task", dto, cancellationToken);
+        var response = await _httpClient.PostAsJsonAsync($"api/board/{boardId}/task", dto, cancellationToken);
 
         return await HandleCreateAsync<CreateTaskResponseDto>(response, cancellationToken);
     }

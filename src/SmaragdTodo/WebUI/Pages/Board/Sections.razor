@@ -9,11 +9,15 @@ else
 {
     @foreach (var item in _items.OrderBy(_ => _.Order))
     {
-        <Section Item="@item"></Section>
+        <Section Item="@item" BoardId="@BoardId"></Section>
     }
 }
 
 @code {
+
+    [Parameter]
+    public string BoardId { get; set; } = default!;
+
     private List<BoardSection>? _items;
 
     protected override Task OnInitializedAsync()
@@ -25,6 +29,7 @@ else
     private async Task OnBoardReceivedNotification(BoardReceivedNotification notification)
     {
         _items = notification.Board.Sections.ToList();
+        BoardId = notification.Board.BoardId;
 
         await InvokeAsync(StateHasChanged);
     }

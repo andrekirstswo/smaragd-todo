@@ -20,6 +20,5 @@ public class BoardCreatedNotificationBackgroundWorker : NotificationBackgroundWo
     protected override async Task Notify(BoardCreatedNotification notification, CancellationToken cancellationToken = default)
     {
         await HubContext.Clients.User(notification.Owner).ReceiveBoardCreatedNotification(notification);
-
     }
 }

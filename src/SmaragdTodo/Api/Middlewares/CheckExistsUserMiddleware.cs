@@ -1,5 +1,5 @@
-﻿using Api.Extensions;
-using Core.Database.Models;
+﻿using Core.Database.Models;
+using Core.Extensions;
 using Microsoft.Azure.CosmosRepository;
 using Microsoft.Extensions.Caching.Hybrid;
 

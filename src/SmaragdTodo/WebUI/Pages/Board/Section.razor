@@ -12,20 +12,15 @@ Class="pa-4 ma-4 d-flex flex-column mud-background-gray rounded-lg">
     T="TaskItem"
     Identifier="@Item.BoardSectionId"
     Class="mud-height-full">
-        <AddTask Item="Item"></AddTask>
+        <AddTask Item="Item" BoardId="@BoardId"></AddTask>
     </MudDropZone>
 </MudPaper>
 
 @code {
-    private bool _isNewTaskOpen = false;
-
     [Parameter]
     public BoardSection Item { get; set; } = default!;
 
-    private void AddTaskItem(BoardSection boardSection)
-    {
-        // ApiClient.CreateTaskAsync()
-        _isNewTaskOpen = false;
-        // refresh dropcontainer via Notification
-    }
+    [Parameter]
+    public string BoardId { get; set; } = default!;
+
 }

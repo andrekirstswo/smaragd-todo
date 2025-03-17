@@ -9,7 +9,7 @@
     ItemDropped="TaskItemUpdated"
     Class="d-flex flex-row">
         <ChildContent>
-            <Sections />
+            <Sections BoardId="@_model.BoardId" />
         </ChildContent>
 </MudDropContainer>
 
@@ -25,18 +25,20 @@
         return Task.CompletedTask;
     }
 
-    private Task OnBoardReceived(BoardReceivedNotification notification)
+    private async Task OnBoardReceived(BoardReceivedNotification notification)
     {
         _model = new SectionsViewViewModel
         {
-            Sections = notification.Board.Sections.ToList()
+            Sections = notification.Board.Sections.ToList(),
+            BoardId = notification.Board.BoardId
         };
 
-        return Task.CompletedTask;
+        await InvokeAsync(StateHasChanged);
     }
 
     private class SectionsViewViewModel
     {
+        public string BoardId { get; set; } = default!;
         public List<BoardSection> Sections { get; set; } = new List<BoardSection>();
     }
 

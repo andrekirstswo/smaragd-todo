@@ -6,9 +6,9 @@
 @implements IDisposable
 
 <MudBadge
-    Content="@_notifications.Count"
-    Overlap="true"
-    Class="mx-6 my-4">
+Content="@_notifications.Count"
+Overlap="true"
+Class="mx-6 my-4">
     <MudMenu
     Color="Color.Inherit"
     Size="Size.Medium"
@@ -18,6 +18,11 @@
             @if (notification is BoardCreatedNotification boardCreatedNotification)
             {
                 <BoardCreatedNotificationComponent Notification="boardCreatedNotification" />
+            }
+
+            if (notification is TaskCreatedNotification taskCreatedNotification)
+            {
+                <TaskCreatedNotificationComponent Notification="taskCreatedNotification" />
             }
         }
     </MudMenu>
@@ -32,8 +37,16 @@
     {
         NotificationBus.Subscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
         NotificationBus.Subscribe<DismissNotificationNotification>(OnNotificationDismissed);
-        
+
+        NotificationBus.Subscribe<TaskCreatedNotification>(OnTaskCreatedNotification);
+
         return Task.CompletedTask;
+    }
+
+    private async Task OnTaskCreatedNotification(TaskCreatedNotification notification)
+    {
+        _notifications.Add(notification);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnBoardCreatedNotification(BoardCreatedNotification notification)
@@ -52,6 +65,7 @@
     public void Dispose()
     {
         NotificationBus.Unsubscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
+        NotificationBus.Unsubscribe<TaskCreatedNotification>(OnTaskCreatedNotification);
         NotificationBus.Unsubscribe<DismissNotificationNotification>(OnNotificationDismissed);
     }
 }

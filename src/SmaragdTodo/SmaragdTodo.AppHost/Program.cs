@@ -27,6 +27,7 @@ builder
     .WithReference(signalr);
 
 var api = builder.AddProject<Projects.Api>("apiservice")
+    .WithExternalHttpEndpoints()
     .WithReference(serviceBus)
     .WithReference(cosmosDb)
     .WithReference(apicache)

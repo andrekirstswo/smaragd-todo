@@ -1,6 +1,6 @@
-﻿using Api.Extensions;
-using Api.Infrastructure;
+﻿using Api.Infrastructure;
 using Core;
+using Core.Extensions;
 using Core.Models;
 using ErrorHandling;
 using Microsoft.Azure.CosmosRepository;

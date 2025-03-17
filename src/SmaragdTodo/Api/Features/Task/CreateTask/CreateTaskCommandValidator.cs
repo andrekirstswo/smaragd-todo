@@ -1,7 +1,7 @@
 ﻿using Api.Database;
-using Api.Extensions;
 using Api.Validators;
 using Core.Database.Models;
+using Core.Extensions;
 using ErrorHandling;
 using FluentValidation;
 
@@ -17,13 +17,14 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
         RuleFor(r => new BoardIdValidatorParameters(r.BoardId))
             .SetValidator(boardIdValidator);
 
-        RuleFor(r => r.Model)
+        RuleFor(r => r.Model.Title)
             .NotNull()
             .WithMessage(command => KnownErrors.Task.HasNoTitle(command.BoardId).Message)
             .WithErrorCode(ErrorCodes.Task.HasNoTitle)
             .NotEmpty()
             .WithMessage(command => KnownErrors.Task.HasNoTitle(command.BoardId).Message)
-            .WithErrorCode(ErrorCodes.Task.HasNoTitle);
+            .WithErrorCode(ErrorCodes.Task.HasNoTitle)
+            .OverridePropertyName(nameof(CreateTaskCommand.Model.Title));
 
         RuleFor(r => r.Model.AssignedTo)
             .NotNull()
@@ -31,7 +32,8 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
             .WithErrorCode(ErrorCodes.Task.HasNoAssignee)
             .NotEmpty()
             .WithMessage(command => KnownErrors.Task.HasNoAssignee(command.BoardId).Message)
-            .WithErrorCode(ErrorCodes.Task.HasNoAssignee);
+            .WithErrorCode(ErrorCodes.Task.HasNoAssignee)
+            .OverridePropertyName(nameof(CreateTaskCommand.Model.Title));
 
         RuleFor(r => r)
             .MustAsync(async (command, token) =>
@@ -44,6 +46,7 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
                        await boardRepository.IsUserInRolesAsync(command.BoardId, userId, new[] { BoardUserAccessRoles.Admin, BoardUserAccessRoles.Writer });
             })
             .WithMessage(KnownErrors.Board.AccessDenied().Message)
-            .WithErrorCode(ErrorCodes.Board.AccessDenied);
+            .WithErrorCode(ErrorCodes.Board.AccessDenied)
+            .OverridePropertyName(nameof(CreateTaskCommand.Model.Title));
     }
 }
