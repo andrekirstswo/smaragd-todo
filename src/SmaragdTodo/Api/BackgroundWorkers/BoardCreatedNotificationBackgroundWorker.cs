@@ -13,11 +13,13 @@ public class BoardCreatedNotificationBackgroundWorker : NotificationBackgroundWo
         : base(
             hubContext,
             serviceBusClient,
-            QueueNames.Board.CreatedNotification,
-            async (context, notification) =>
-            {
-                await context.Clients.User(notification.Owner).ReceiveBoardCreatedNotification(notification);
-            })
+            QueueNames.Board.CreatedNotification)
     {
+    }
+
+    protected override async Task Notify(BoardCreatedNotification notification, CancellationToken cancellationToken = default)
+    {
+        await HubContext.Clients.User(notification.Owner).ReceiveBoardCreatedNotification(notification);
+
     }
 }

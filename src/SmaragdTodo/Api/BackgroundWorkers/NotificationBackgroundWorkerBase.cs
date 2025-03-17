@@ -8,22 +8,22 @@ namespace Api.BackgroundWorkers;
 public abstract class NotificationBackgroundWorkerBase<TNotification> : BackgroundService
     where TNotification : Notification
 {
-    private readonly IHubContext<NotificationHub, INotificationHubClient> _hubContext;
     private readonly ServiceBusClient _serviceBusClient;
     private readonly string _queueName;
-    private readonly Func<IHubContext<NotificationHub, INotificationHubClient>, TNotification, Task> _signalr;
 
     protected NotificationBackgroundWorkerBase(
         IHubContext<NotificationHub, INotificationHubClient> hubContext,
         ServiceBusClient serviceBusClient,
-        string queueName,
-        Func<IHubContext<NotificationHub, INotificationHubClient>, TNotification, Task> signalr)
+        string queueName)
     {
-        _hubContext = hubContext;
+        HubContext = hubContext;
         _serviceBusClient = serviceBusClient;
         _queueName = queueName;
-        _signalr = signalr;
     }
+
+    protected IHubContext<NotificationHub, INotificationHubClient> HubContext { get; init; }
+
+    protected abstract Task Notify(TNotification notification, CancellationToken cancellationToken = default);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -46,7 +46,7 @@ public abstract class NotificationBackgroundWorkerBase<TNotification> : Backgrou
                 continue;
             }
 
-            await _signalr(_hubContext, notification);
+            await Notify(notification, stoppingToken);
 
             await receiver.CompleteMessageAsync(message, stoppingToken);
         }

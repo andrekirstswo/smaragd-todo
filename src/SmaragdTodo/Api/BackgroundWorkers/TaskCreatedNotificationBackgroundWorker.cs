@@ -13,14 +13,15 @@ public class TaskCreatedNotificationBackgroundWorker : NotificationBackgroundWor
         : base(
             hubContext,
             serviceBusClient,
-            QueueNames.Task.CreatedNotification,
-            async (context, notification) =>
-            {
-                foreach (var assignee in notification.AssignedTo)
-                {
-                    await context.Clients.User(assignee).ReceiveTaskCreatedNotification(notification);
-                }
-            })
+            QueueNames.Task.CreatedNotification)
     {
+    }
+
+    protected override async Task Notify(TaskCreatedNotification notification, CancellationToken cancellationToken = default)
+    {
+        foreach (var assignee in notification.AssignedTo)
+        {
+            await HubContext.Clients.User(assignee).ReceiveTaskCreatedNotification(notification);
+        }
     }
 }
