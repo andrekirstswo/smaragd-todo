@@ -1,5 +1,4 @@
-﻿@using Core.Models
-@attribute [Route(NavigationRoutes.Boards.Create)]
+﻿@attribute [Route(NavigationRoutes.Boards.Create)]
 @implements IDisposable
 
 <h3>Create</h3>
@@ -31,7 +30,7 @@
     bool _success;
     string[] _errors = Array.Empty<string>();
     MudForm _form;
-    readonly CreateBoardDto _model = new CreateBoardDto();
+    readonly CreateBoardDtoInput _model = new CreateBoardDtoInput();
     
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -39,7 +38,8 @@
     {
         await _form.Validate();
 
-        var response = await ApiClient.CreateBoardAsync(_model, _cancellationTokenSource.Token);
+        var response = await CryptoClient.CrateBoard.ExecuteAsync(_model, _cancellationTokenSource.Token);
+    // var response = await ApiClient.CreateBoardAsync(_model, _cancellationTokenSource.Token);
         
         NavManager.NavigateTo(NavigationRoutes.Boards.Base);
     }

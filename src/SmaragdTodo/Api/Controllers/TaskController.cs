@@ -29,6 +29,17 @@ public class TaskController : ControllerBase
         throw new NotImplementedException();
     }
 
+    [HttpGet("/api/board/{boardId}/task")]
+    public async Task<IActionResult> GetAll(string boardId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+        //var result = await _mediator.Send(GetBoardTasksQuery(boardId), cancellationToken);
+
+        //return result.IsSuccess
+        //    ? Ok(result.Value)
+        //    : BadRequest(result.Error);
+    }
+
     [HttpPost("/api/board/{boardId}/task")]
     [ProducesResponseType(typeof(CreateTaskResponseDto), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> Create(string boardId, [FromBody] CreateTaskDto model, CancellationToken cancellationToken = default)

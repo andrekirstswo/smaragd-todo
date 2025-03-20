@@ -2,8 +2,8 @@
 using Core;
 using Core.Extensions;
 using Core.Models;
-using ErrorHandling;
 using Microsoft.Azure.CosmosRepository;
+using Error = ErrorHandling.Error;
 
 namespace Api.Features.Board.GetBoards;
 

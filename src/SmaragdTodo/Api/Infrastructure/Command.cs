@@ -1,6 +1,6 @@
 ﻿using Core;
-using ErrorHandling;
 using MediatR;
+using Error = ErrorHandling.Error;
 
 namespace Api.Infrastructure;
 

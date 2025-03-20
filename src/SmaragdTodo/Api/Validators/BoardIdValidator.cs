@@ -3,6 +3,7 @@ using Core.Extensions;
 using ErrorHandling;
 using FluentValidation;
 using Microsoft.Azure.CosmosRepository;
+using ErrorCodes = ErrorHandling.ErrorCodes;
 
 namespace Api.Validators;
 

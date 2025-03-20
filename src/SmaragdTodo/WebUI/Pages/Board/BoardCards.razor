@@ -24,8 +24,19 @@ else
     protected override async Task OnInitializedAsync()
     {
         _boardCardViewModels = null;
-        var boards = await ApiClient.GetBoardsAsync();
-        _boardCardViewModels = boards.Select(BoardCardViewModel.Map).ToList();
+        var result = await CryptoClient.GetBoardCardViewModels.ExecuteAsync();
+
+        if (result.Data is not null)
+        {
+            var boards = result.Data.Boards.Select(b => new BoardCardViewModel
+            {
+                BoardId = b.BoardId,
+                Name = b.Name
+            });
+
+            _boardCardViewModels = new List<BoardCardViewModel>();
+            _boardCardViewModels.AddRange(boards);
+        }
 
         NotificationBus.Subscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
     }
@@ -52,5 +63,4 @@ else
     {
         NotificationBus.Unsubscribe<BoardCreatedNotification>(OnBoardCreatedNotification);
     }
-
 }

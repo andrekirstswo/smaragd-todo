@@ -18,6 +18,11 @@ public class BoardRepository
         return result.SingleOrDefault();
     }
 
+    public async Task<IEnumerable<Board>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        return await _repository.GetAsync(p => p.Owner == userId || (p.Accesses != null && p.Accesses.Any(a => a.UserId == userId)), cancellationToken);
+    }
+
     public async Task<bool> IsUserInRolesAsync(string boardId, string userId, IEnumerable<string> roles, CancellationToken cancellationToken = default)
     {
         return await _repository.ExistsAsync(b =>

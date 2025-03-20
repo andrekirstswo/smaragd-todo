@@ -2,9 +2,9 @@
 using Core;
 using Core.Extensions;
 using Core.Models;
-using ErrorHandling;
 using Events;
 using BoardSection = Core.Models.BoardSection;
+using Error = ErrorHandling.Error;
 
 namespace Api.Features.Board.CreateBoard;
 

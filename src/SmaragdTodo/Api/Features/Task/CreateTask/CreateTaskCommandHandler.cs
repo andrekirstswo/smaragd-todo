@@ -1,8 +1,8 @@
 ﻿using Api.Infrastructure;
 using Core;
 using Core.Models;
-using ErrorHandling;
 using Events;
+using Error = ErrorHandling.Error;
 
 namespace Api.Features.Task.CreateTask;
 

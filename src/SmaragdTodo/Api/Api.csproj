@@ -19,6 +19,8 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
     <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.68.0.1869" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="15.0.3" />
+    <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.0.3" />
     <PackageReference Include="IEvangelist.Azure.CosmosRepository" Version="9.0.1" />
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.0" />

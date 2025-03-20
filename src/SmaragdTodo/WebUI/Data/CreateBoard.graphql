@@ -1,0 +1,5 @@
+mutation crateBoard($dto: CreateBoardDtoInput!) {
+    createBoard(dto: $dto) {
+        statusUrl
+    }
+}

@@ -1,11 +1,13 @@
 using Api.BackgroundWorkers;
 using Api.Database;
+using Api.Database.GraphQL;
 using Api.Infrastructure;
 using Api.Middlewares;
 using Api.Services;
 using Core;
 using Core.Database.Models;
 using Core.Infrastructure;
+using ErrorHandling;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,6 +29,11 @@ public class Program
         builder.Services.AddHybridCache();
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
+
+        builder.Services
+            .AddGraphQLServer()
+            .AddQueryType<BoardQueries>()
+            .AddMutationType<BoardMutations>();
 
         builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         builder.Services.AddSingleton<IMessaging, Messaging>();
@@ -156,6 +163,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapGraphQL();
 
         app.MapHub<NotificationHub>($"/{SignalRHubNames.Notifications}");
 
